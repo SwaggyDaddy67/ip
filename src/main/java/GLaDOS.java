@@ -18,13 +18,26 @@ public class GLaDOS {
         System.out.println(indent + "State your query. I have other tests to run.");
         System.out.println(line);
 
-        // Echo each command back until the user types "bye".
+        // Holds the tasks entered
+        String[] tasks = new String[100];
+        int taskCount = 0;
+
         Scanner in = new Scanner(System.in);
         String input = in.nextLine();
 
         while (!input.equals("bye")) {
             System.out.println(line);
-            System.out.println(indent + input);
+
+            if (input.equals("list")) {
+                for (int i = 0; i < taskCount; i++) {
+                    System.out.println(indent + (i + 1) + ". " + tasks[i]);
+                }
+            } else {
+                tasks[taskCount] = input;
+                taskCount++;
+                System.out.println(indent + "added: " + input);
+            }
+
             System.out.println(line);
             input = in.nextLine();
         }
