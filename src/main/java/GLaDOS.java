@@ -45,6 +45,12 @@ public class GLaDOS {
                 isDone[index] = true;
                 System.out.println(indent + "Nice! I've marked this task as done:");
                 System.out.println(indent + "  [X] " + tasks[index]);
+            } else if (input.startsWith("unmark ")) {
+                // same as mark, but "unmark " is 7 chars
+                int index = Integer.parseInt(input.substring(7)) - 1;
+                isDone[index] = false;
+                System.out.println(indent + "OK, I've marked this task as not done yet:");
+                System.out.println(indent + "  [ ] " + tasks[index]);
             } else {
                 tasks[taskCount] = input;
                 taskCount++;
