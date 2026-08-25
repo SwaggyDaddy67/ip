@@ -20,6 +20,8 @@ public class GLaDOS {
 
         // Holds the tasks entered
         String[] tasks = new String[100];
+        // Done status, same slot number as tasks
+        boolean[] isDone = new boolean[100];
         int taskCount = 0;
 
         Scanner in = new Scanner(System.in);
@@ -29,9 +31,20 @@ public class GLaDOS {
             System.out.println(line);
 
             if (input.equals("list")) {
+                System.out.println(indent + "Here are the tasks in your list:");
                 for (int i = 0; i < taskCount; i++) {
-                    System.out.println(indent + (i + 1) + ". " + tasks[i]);
+                    String status = "[ ] ";
+                    if (isDone[i]) {
+                        status = "[X] ";
+                    }
+                    System.out.println(indent + (i + 1) + "." + status + tasks[i]);
                 }
+            } else if (input.startsWith("mark ")) {
+                // "mark 2" -> cut off "mark " to get the number, -1 to get the slot
+                int index = Integer.parseInt(input.substring(5)) - 1;
+                isDone[index] = true;
+                System.out.println(indent + "Nice! I've marked this task as done:");
+                System.out.println(indent + "  [X] " + tasks[index]);
             } else {
                 tasks[taskCount] = input;
                 taskCount++;
