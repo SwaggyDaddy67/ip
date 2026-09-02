@@ -83,12 +83,12 @@ public class GLaDOS {
                     System.out.println(INDENT + (i + 1) + "." + tasks[i]);
                 }
             } else if (input.startsWith(COMMAND_MARK)) {
-                int index = Integer.parseInt(input.substring(COMMAND_MARK.length())) - 1;
+                int index = parseTaskIndex(input, COMMAND_MARK);
                 tasks[index].markAsDone();
                 System.out.println(INDENT + "Nice! I've marked this task as done:");
                 System.out.println(INDENT + "  " + tasks[index]);
             } else if (input.startsWith(COMMAND_UNMARK)) {
-                int index = Integer.parseInt(input.substring(COMMAND_UNMARK.length())) - 1;
+                int index = parseTaskIndex(input, COMMAND_UNMARK);
                 tasks[index].markAsNotDone();
                 System.out.println(INDENT + "OK, I've marked this task as not done yet:");
                 System.out.println(INDENT + "  " + tasks[index]);
@@ -116,6 +116,11 @@ public class GLaDOS {
         System.out.println(DIVIDER);
         System.out.println(INDENT + "Test concluded. Try not to disappoint me next time.");
         System.out.println(DIVIDER);
+    }
+
+    /** Parses the task number after a command word, e.g. "mark 2", into a 0-based index. */
+    private static int parseTaskIndex(String input, String commandPrefix) {
+        return Integer.parseInt(input.substring(commandPrefix.length())) - 1;
     }
 
     /** Prints the confirmation shown after a task is added. */
