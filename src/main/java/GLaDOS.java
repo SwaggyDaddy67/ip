@@ -94,19 +94,13 @@ public class GLaDOS {
                 System.out.println(INDENT + "  " + tasks[index]);
             } else if (input.startsWith(COMMAND_TODO)) {
                 String description = input.substring(COMMAND_TODO.length());
-                tasks[taskCount] = new Todo(description);
-                taskCount++;
-                printTaskAdded(tasks[taskCount - 1], taskCount);
+                taskCount = addTask(tasks, taskCount, new Todo(description));
             } else if (input.startsWith(COMMAND_DEADLINE)) {
                 String details = input.substring(COMMAND_DEADLINE.length());
-                tasks[taskCount] = parseDeadline(details);
-                taskCount++;
-                printTaskAdded(tasks[taskCount - 1], taskCount);
+                taskCount = addTask(tasks, taskCount, parseDeadline(details));
             } else if (input.startsWith(COMMAND_EVENT)) {
                 String details = input.substring(COMMAND_EVENT.length());
-                tasks[taskCount] = parseEvent(details);
-                taskCount++;
-                printTaskAdded(tasks[taskCount - 1], taskCount);
+                taskCount = addTask(tasks, taskCount, parseEvent(details));
             }
 
             System.out.println(DIVIDER);
@@ -123,11 +117,18 @@ public class GLaDOS {
         return Integer.parseInt(input.substring(commandPrefix.length())) - 1;
     }
 
-    /** Prints the confirmation shown after a task is added. */
-    private static void printTaskAdded(Task task, int taskCount) {
+    /**
+     * Stores the given task in the next free slot and prints the confirmation.
+     *
+     * @return the updated task count, since Java passes taskCount by value.
+     */
+    private static int addTask(Task[] tasks, int taskCount, Task task) {
+        tasks[taskCount] = task;
+        taskCount++;
         System.out.println(INDENT + "Got it. I've added this task:");
         System.out.println(INDENT + "  " + task);
         System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
+        return taskCount;
     }
 
     /** Parses the text after "deadline " into a Deadline task. */
