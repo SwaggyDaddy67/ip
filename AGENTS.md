@@ -34,6 +34,10 @@ All Java code in this project must follow the SE-EDU Java coding standard (basic
 
 The rules are available as the `seedu-java-coding-standard` skill. Apply that skill when writing, reviewing, or modifying any Java code in this repository.
 
+## Testing
+
+After any code change that affects the command loop, a command's input format, or any user-visible output, update `test/ui-test-plan.md` if the change affects an existing test case's expected behavior, then invoke the `test-ui` skill to confirm the program still behaves as expected before considering the change complete.
+
 ## Git
 
 Use lightweight tags unless the user requests an annotated tag.
