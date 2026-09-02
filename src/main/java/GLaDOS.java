@@ -96,9 +96,7 @@ public class GLaDOS {
                 String description = input.substring(COMMAND_TODO.length());
                 tasks[taskCount] = new Todo(description);
                 taskCount++;
-                System.out.println(INDENT + "Got it. I've added this task:");
-                System.out.println(INDENT + "  " + tasks[taskCount - 1]);
-                System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
+                printTaskAdded(tasks[taskCount - 1], taskCount);
             } else if (input.startsWith(COMMAND_DEADLINE)) {
                 String details = input.substring(COMMAND_DEADLINE.length());
                 int byIndex = details.indexOf(DELIMITER_BY);
@@ -106,9 +104,7 @@ public class GLaDOS {
                 String by = details.substring(byIndex + DELIMITER_BY.length());
                 tasks[taskCount] = new Deadline(description, by);
                 taskCount++;
-                System.out.println(INDENT + "Got it. I've added this task:");
-                System.out.println(INDENT + "  " + tasks[taskCount - 1]);
-                System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
+                printTaskAdded(tasks[taskCount - 1], taskCount);
             } else if (input.startsWith(COMMAND_EVENT)) {
                 String details = input.substring(COMMAND_EVENT.length());
                 int fromIndex = details.indexOf(DELIMITER_FROM);
@@ -118,9 +114,7 @@ public class GLaDOS {
                 String to = details.substring(toIndex + DELIMITER_TO.length());
                 tasks[taskCount] = new Event(description, from, to);
                 taskCount++;
-                System.out.println(INDENT + "Got it. I've added this task:");
-                System.out.println(INDENT + "  " + tasks[taskCount - 1]);
-                System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
+                printTaskAdded(tasks[taskCount - 1], taskCount);
             }
 
             System.out.println(DIVIDER);
@@ -130,5 +124,12 @@ public class GLaDOS {
         System.out.println(DIVIDER);
         System.out.println(INDENT + "Test concluded. Try not to disappoint me next time.");
         System.out.println(DIVIDER);
+    }
+
+    /** Prints the confirmation shown after a task is added. */
+    private static void printTaskAdded(Task task, int taskCount) {
+        System.out.println(INDENT + "Got it. I've added this task:");
+        System.out.println(INDENT + "  " + task);
+        System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
     }
 }
