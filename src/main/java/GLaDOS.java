@@ -99,20 +99,12 @@ public class GLaDOS {
                 printTaskAdded(tasks[taskCount - 1], taskCount);
             } else if (input.startsWith(COMMAND_DEADLINE)) {
                 String details = input.substring(COMMAND_DEADLINE.length());
-                int byIndex = details.indexOf(DELIMITER_BY);
-                String description = details.substring(0, byIndex);
-                String by = details.substring(byIndex + DELIMITER_BY.length());
-                tasks[taskCount] = new Deadline(description, by);
+                tasks[taskCount] = parseDeadline(details);
                 taskCount++;
                 printTaskAdded(tasks[taskCount - 1], taskCount);
             } else if (input.startsWith(COMMAND_EVENT)) {
                 String details = input.substring(COMMAND_EVENT.length());
-                int fromIndex = details.indexOf(DELIMITER_FROM);
-                int toIndex = details.indexOf(DELIMITER_TO);
-                String description = details.substring(0, fromIndex);
-                String from = details.substring(fromIndex + DELIMITER_FROM.length(), toIndex);
-                String to = details.substring(toIndex + DELIMITER_TO.length());
-                tasks[taskCount] = new Event(description, from, to);
+                tasks[taskCount] = parseEvent(details);
                 taskCount++;
                 printTaskAdded(tasks[taskCount - 1], taskCount);
             }
@@ -131,5 +123,23 @@ public class GLaDOS {
         System.out.println(INDENT + "Got it. I've added this task:");
         System.out.println(INDENT + "  " + task);
         System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
+    }
+
+    /** Parses the text after "deadline " into a Deadline task. */
+    private static Deadline parseDeadline(String details) {
+        int byIndex = details.indexOf(DELIMITER_BY);
+        String description = details.substring(0, byIndex);
+        String by = details.substring(byIndex + DELIMITER_BY.length());
+        return new Deadline(description, by);
+    }
+
+    /** Parses the text after "event " into an Event task. */
+    private static Event parseEvent(String details) {
+        int fromIndex = details.indexOf(DELIMITER_FROM);
+        int toIndex = details.indexOf(DELIMITER_TO);
+        String description = details.substring(0, fromIndex);
+        String from = details.substring(fromIndex + DELIMITER_FROM.length(), toIndex);
+        String to = details.substring(toIndex + DELIMITER_TO.length());
+        return new Event(description, from, to);
     }
 }
