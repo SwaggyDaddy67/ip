@@ -94,7 +94,7 @@ public class GLaDOS {
                 System.out.println(INDENT + "  " + tasks[index]);
             } else if (input.startsWith(COMMAND_TODO)) {
                 String description = input.substring(COMMAND_TODO.length());
-                tasks[taskCount] = new Task(description, "T", null, null, null);
+                tasks[taskCount] = new Todo(description);
                 taskCount++;
                 System.out.println(INDENT + "Got it. I've added this task:");
                 System.out.println(INDENT + "  " + tasks[taskCount - 1]);
@@ -104,7 +104,7 @@ public class GLaDOS {
                 int byIndex = details.indexOf(DELIMITER_BY);
                 String description = details.substring(0, byIndex);
                 String by = details.substring(byIndex + DELIMITER_BY.length());
-                tasks[taskCount] = new Task(description, "D", by, null, null);
+                tasks[taskCount] = new Deadline(description, by);
                 taskCount++;
                 System.out.println(INDENT + "Got it. I've added this task:");
                 System.out.println(INDENT + "  " + tasks[taskCount - 1]);
@@ -116,7 +116,7 @@ public class GLaDOS {
                 String description = details.substring(0, fromIndex);
                 String from = details.substring(fromIndex + DELIMITER_FROM.length(), toIndex);
                 String to = details.substring(toIndex + DELIMITER_TO.length());
-                tasks[taskCount] = new Task(description, "E", null, from, to);
+                tasks[taskCount] = new Event(description, from, to);
                 taskCount++;
                 System.out.println(INDENT + "Got it. I've added this task:");
                 System.out.println(INDENT + "  " + tasks[taskCount - 1]);
