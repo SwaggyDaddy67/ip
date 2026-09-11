@@ -77,3 +77,46 @@ bye
      Test concluded. Try not to disappoint me next time.
     ____________________________________________________________
 ```
+
+## Test 2: Reject a todo with no description
+
+**Aim:** Verify that a bare `todo` command is rejected with an error message
+instead of adding a blank task, and that a normal todo entered afterwards is
+still added correctly.
+
+**Input:**
+```text
+todo
+todo read book
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     A todo with no description. Try again, with words this time.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] read book
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```

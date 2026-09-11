@@ -24,8 +24,8 @@ public class GLaDOS {
     /** Prefix of the command that marks a task as not done, e.g. "unmark 2". */
     private static final String COMMAND_UNMARK = "unmark ";
 
-    /** Prefix of the command that adds a todo task. */
-    private static final String COMMAND_TODO = "todo ";
+    /** Command word that adds a todo task, e.g. "todo read book". */
+    private static final String COMMAND_TODO = "todo";
 
     /** Prefix of the command that adds a deadline task. */
     private static final String COMMAND_DEADLINE = "deadline ";
@@ -92,9 +92,14 @@ public class GLaDOS {
                 tasks[index].markAsNotDone();
                 System.out.println(INDENT + "OK, I've marked this task as not done yet:");
                 System.out.println(INDENT + "  " + tasks[index]);
-            } else if (input.startsWith(COMMAND_TODO)) {
-                String description = input.substring(COMMAND_TODO.length());
-                taskCount = addTask(tasks, taskCount, new Todo(description));
+            } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
+                String description = input.substring(COMMAND_TODO.length()).trim();
+                if (description.isEmpty()) {
+                    System.out.println(INDENT
+                            + "A todo with no description. Try again, with words this time.");
+                } else {
+                    taskCount = addTask(tasks, taskCount, new Todo(description));
+                }
             } else if (input.startsWith(COMMAND_DEADLINE)) {
                 String details = input.substring(COMMAND_DEADLINE.length());
                 taskCount = addTask(tasks, taskCount, parseDeadline(details));
