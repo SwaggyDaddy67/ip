@@ -120,3 +120,51 @@ bye
      Test concluded. Try not to disappoint me next time.
     ____________________________________________________________
 ```
+
+## Test 3: Reject an unrecognised command, then keep working normally
+
+**Aim:** Verify that an unrecognised command and an empty todo are each
+rejected with their own error message, and that a valid todo entered
+afterwards is still added correctly, so a rejected command leaves the task
+list untouched.
+
+**Input:**
+```text
+blah
+todo
+todo read book
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, bye.
+    ____________________________________________________________
+    ____________________________________________________________
+     A todo with no description. Try again, with words this time.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] read book
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```

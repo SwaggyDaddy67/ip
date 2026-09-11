@@ -106,6 +106,9 @@ public class GLaDOS {
             } else if (input.startsWith(COMMAND_EVENT)) {
                 String details = input.substring(COMMAND_EVENT.length());
                 taskCount = addTask(tasks, taskCount, parseEvent(details));
+            } else {
+                System.out.println(INDENT + "I have no idea what that was. Try one of: "
+                        + "list, todo, deadline, event, mark, unmark, bye.");
             }
 
             System.out.println(DIVIDER);
