@@ -5,19 +5,17 @@ import glados.task.Event;
 import glados.task.Task;
 import glados.task.Todo;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
  *
- * <p>Supports adding a todo, deadline, or event task, listing all tasks, and
- * marking a task as done or not done. The conversation ends when the user
+ * <p>Supports adding a todo, deadline, or event task, listing all tasks,
+ * marking a task as done or not done, and deleting a task. The conversation ends when the user
  * enters the exit command.
  */
 public class GLaDOS {
-
-    /** Maximum number of tasks that can be stored. */
-    private static final int MAX_TASKS = 100;
 
     /** Command that ends the conversation. */
     private static final String COMMAND_BYE = "bye";
@@ -30,6 +28,9 @@ public class GLaDOS {
 
     /** Command word that marks a task as not done, e.g. "unmark 2". */
     private static final String COMMAND_UNMARK = "unmark";
+
+    /** Command word that removes a task from the list, e.g. "delete 2". */
+    private static final String COMMAND_DELETE = "delete";
 
     /** Command word that adds a todo task, e.g. "todo read book". */
     private static final String COMMAND_TODO = "todo";
@@ -75,8 +76,8 @@ public class GLaDOS {
         System.out.println(INDENT + "State your query. I have other tests to run.");
         System.out.println(DIVIDER);
 
-        Task[] tasks = new Task[MAX_TASKS];
-        int taskCount = 0;
+        // An ArrayList grows as needed, so there is no fixed task limit or separate count to track.
+        ArrayList<Task> tasks = new ArrayList<>();
 
         Scanner in = new Scanner(System.in);
         String input = in.nextLine();
@@ -87,29 +88,35 @@ public class GLaDOS {
             try {
                 if (input.equals(COMMAND_LIST)) {
                     System.out.println(INDENT + "Here are the tasks in your list:");
-                    for (int i = 0; i < taskCount; i++) {
-                        System.out.println(INDENT + (i + 1) + "." + tasks[i]);
+                    for (int i = 0; i < tasks.size(); i++) {
+                        System.out.println(INDENT + (i + 1) + "." + tasks.get(i));
                     }
                 } else if (input.equals(COMMAND_MARK) || input.startsWith(COMMAND_MARK + " ")) {
-                    int index = parseTaskIndex(input, COMMAND_MARK, taskCount);
-                    tasks[index].markAsDone();
+                    Task task = tasks.get(parseTaskIndex(input, COMMAND_MARK, tasks.size()));
+                    task.markAsDone();
                     System.out.println(INDENT + "Nice! I've marked this task as done:");
-                    System.out.println(INDENT + "  " + tasks[index]);
+                    System.out.println(INDENT + "  " + task);
                 } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
-                    int index = parseTaskIndex(input, COMMAND_UNMARK, taskCount);
-                    tasks[index].markAsNotDone();
+                    Task task = tasks.get(parseTaskIndex(input, COMMAND_UNMARK, tasks.size()));
+                    task.markAsNotDone();
                     System.out.println(INDENT + "OK, I've marked this task as not done yet:");
-                    System.out.println(INDENT + "  " + tasks[index]);
+                    System.out.println(INDENT + "  " + task);
+                } else if (input.equals(COMMAND_DELETE) || input.startsWith(COMMAND_DELETE + " ")) {
+                    // remove(int) takes the task out and shifts every later task up by one.
+                    Task task = tasks.remove(parseTaskIndex(input, COMMAND_DELETE, tasks.size()));
+                    System.out.println(INDENT + "Noted. I've removed this task:");
+                    System.out.println(INDENT + "  " + task);
+                    System.out.println(INDENT + "Now you have " + tasks.size() + " tasks in the list.");
                 } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
-                    taskCount = addTask(tasks, taskCount, parseTodo(input));
+                    addTask(tasks, parseTodo(input));
                 } else if (input.equals(COMMAND_DEADLINE)
                         || input.startsWith(COMMAND_DEADLINE + " ")) {
-                    taskCount = addTask(tasks, taskCount, parseDeadline(input));
+                    addTask(tasks, parseDeadline(input));
                 } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
-                    taskCount = addTask(tasks, taskCount, parseEvent(input));
+                    addTask(tasks, parseEvent(input));
                 } else {
                     throw new GLaDOSException("I have no idea what that was. Try one of: "
-                            + "list, todo, deadline, event, mark, unmark, bye.");
+                            + "list, todo, deadline, event, mark, unmark, delete, bye.");
                 }
             } catch (GLaDOSException e) {
                 System.out.println(INDENT + e.getMessage());
@@ -168,17 +175,13 @@ public class GLaDOS {
     }
 
     /**
-     * Stores the given task in the next free slot and prints the confirmation.
-     *
-     * @return the updated task count, since Java passes taskCount by value.
+     * Appends the given task to the list and prints the confirmation.
      */
-    private static int addTask(Task[] tasks, int taskCount, Task task) {
-        tasks[taskCount] = task;
-        taskCount++;
+    private static void addTask(ArrayList<Task> tasks, Task task) {
+        tasks.add(task);
         System.out.println(INDENT + "Got it. I've added this task:");
         System.out.println(INDENT + "  " + task);
-        System.out.println(INDENT + "Now you have " + taskCount + " tasks in the list.");
-        return taskCount;
+        System.out.println(INDENT + "Now you have " + tasks.size() + " tasks in the list.");
     }
 
     /**

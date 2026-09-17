@@ -150,7 +150,7 @@ bye
      State your query. I have other tests to run.
     ____________________________________________________________
     ____________________________________________________________
-     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, bye.
+     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, delete, bye.
     ____________________________________________________________
     ____________________________________________________________
      A todo with no description. Try again, with words this time.
@@ -267,6 +267,93 @@ bye
     ____________________________________________________________
      Here are the tasks in your list:
      1.[D][ ] return book (by: Sunday)
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+## Test 6: Delete tasks, including invalid delete arguments
+
+**Aim:** Verify that `delete` with no number, a non-numeric argument, and an
+out-of-range number are each rejected, that deleting a middle task removes
+it and shifts later tasks up in `list`, and that deleting the remaining
+tasks leaves an empty list.
+
+**Input:**
+```text
+todo read book
+deadline return book /by June 6th
+event project meeting /from Aug 6th 2pm /to 4pm
+delete
+delete abc
+delete 5
+delete 2
+list
+delete 1
+delete 1
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [D][ ] return book (by: June 6th)
+     Now you have 2 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     Now you have 3 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Which task? Give me a number, like delete 2.
+    ____________________________________________________________
+    ____________________________________________________________
+     "abc" is not a task number.
+    ____________________________________________________________
+    ____________________________________________________________
+     There is no task 5. Your list has 3.
+    ____________________________________________________________
+    ____________________________________________________________
+     Noted. I've removed this task:
+       [D][ ] return book (by: June 6th)
+     Now you have 2 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] read book
+     2.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+    ____________________________________________________________
+    ____________________________________________________________
+     Noted. I've removed this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Noted. I've removed this task:
+       [E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     Now you have 0 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
     ____________________________________________________________
     ____________________________________________________________
      Test concluded. Try not to disappoint me next time.
