@@ -11,8 +11,8 @@ import java.util.Scanner;
 /**
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
  *
- * <p>Supports adding a todo, deadline, or event task, listing all tasks, and
- * marking a task as done or not done. The conversation ends when the user
+ * <p>Supports adding a todo, deadline, or event task, listing all tasks,
+ * marking a task as done or not done, and deleting a task. The conversation ends when the user
  * enters the exit command.
  */
 public class GLaDOS {
@@ -28,6 +28,9 @@ public class GLaDOS {
 
     /** Command word that marks a task as not done, e.g. "unmark 2". */
     private static final String COMMAND_UNMARK = "unmark";
+
+    /** Command word that removes a task from the list, e.g. "delete 2". */
+    private static final String COMMAND_DELETE = "delete";
 
     /** Command word that adds a todo task, e.g. "todo read book". */
     private static final String COMMAND_TODO = "todo";
@@ -98,6 +101,12 @@ public class GLaDOS {
                     task.markAsNotDone();
                     System.out.println(INDENT + "OK, I've marked this task as not done yet:");
                     System.out.println(INDENT + "  " + task);
+                } else if (input.equals(COMMAND_DELETE) || input.startsWith(COMMAND_DELETE + " ")) {
+                    // remove(int) takes the task out and shifts every later task up by one.
+                    Task task = tasks.remove(parseTaskIndex(input, COMMAND_DELETE, tasks.size()));
+                    System.out.println(INDENT + "Noted. I've removed this task:");
+                    System.out.println(INDENT + "  " + task);
+                    System.out.println(INDENT + "Now you have " + tasks.size() + " tasks in the list.");
                 } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
                     addTask(tasks, parseTodo(input));
                 } else if (input.equals(COMMAND_DEADLINE)
@@ -107,7 +116,7 @@ public class GLaDOS {
                     addTask(tasks, parseEvent(input));
                 } else {
                     throw new GLaDOSException("I have no idea what that was. Try one of: "
-                            + "list, todo, deadline, event, mark, unmark, bye.");
+                            + "list, todo, deadline, event, mark, unmark, delete, bye.");
                 }
             } catch (GLaDOSException e) {
                 System.out.println(INDENT + e.getMessage());
