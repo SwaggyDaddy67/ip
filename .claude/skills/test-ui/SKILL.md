@@ -27,24 +27,30 @@ python .claude/skills/test-ui/scripts/run_ui_tests.py path/to/other-plan.md
 
 For each test case, the script:
 1. Prints the test's name and aim.
-2. Feeds its **Input** block to GLaDOS on stdin, as if typed by a user.
-3. Prints the console input and the actual console output, so the full
+2. Creates a fresh, empty working folder for GLaDOS to run in, so saved
+   data never carries over between tests or into the repository. If the
+   test has a **Data file before** block, writes it to `data/glados.txt`
+   in that folder first.
+3. Feeds its **Input** block to GLaDOS on stdin, as if typed by a user.
+4. Prints the console input and the actual console output, so the full
    session is visible.
-4. Compares the actual output to the test's **Expected output** block
+5. Compares the actual output to the test's **Expected output** block
    (Windows/Unix line-ending differences are ignored, everything else
-   must match exactly).
-5. **Stops immediately at the first failing test case** and reports both
-   the expected and actual output for that case, rather than continuing
-   on to the rest.
+   must match exactly). If the test has a **Data file after** block, also
+   compares it to the contents of `data/glados.txt` after the run.
+6. **Stops immediately at the first failing test case** and reports both
+   the expected and actual output (or data file) for that case, rather
+   than continuing on to the rest.
 
 If every test case passes, it prints a final summary line.
 
 ## Adding or updating test cases
 
 Test cases live in test/ui-test-plan.md, one per `## Test N: <name>` section,
-each with a `**Aim:**` line and exactly one Input and one Expected output
-fenced ` ```text ` block, in that order. See the existing test case in that
-file for the exact format the parser expects.
+each with a `**Aim:**` line and one `**Input:**` and one `**Expected output:**`
+fenced ` ```text ` block. Optional `**Data file before:**` and
+`**Data file after:**` blocks set up and check `data/glados.txt`. See the
+existing test cases in that file for the exact format the parser expects.
 
 **Whenever a code change alters a command's input format or reply wording**,
 update the affected test case(s) in test/ui-test-plan.md to match, then
