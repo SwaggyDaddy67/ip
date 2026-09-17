@@ -12,8 +12,8 @@ import java.util.Scanner;
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
  *
  * <p>Supports adding a todo, deadline, or event task, listing all tasks, and
- * marking a task as done or not done. The task list is saved to disk after
- * every change. The conversation ends when the user enters the exit command.
+ * marking a task as done or not done. The task list is loaded from disk at
+ * startup and saved after every change. The conversation ends when the user enters the exit command.
  */
 public class GLaDOS {
 
@@ -85,6 +85,13 @@ public class GLaDOS {
         Task[] tasks = new Task[MAX_TASKS];
         int taskCount = 0;
         Storage storage = new Storage(DATA_FILE);
+        try {
+            taskCount = storage.load(tasks);
+        } catch (GLaDOSException e) {
+            System.out.println(DIVIDER);
+            System.out.println(INDENT + e.getMessage());
+            System.out.println(DIVIDER);
+        }
 
         Scanner in = new Scanner(System.in);
         String input = in.nextLine();
