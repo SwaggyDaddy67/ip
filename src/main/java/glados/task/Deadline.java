@@ -1,3 +1,5 @@
+package glados.task;
+
 /**
  * Represents a deadline: a task that needs to be done before a specific date/time.
  */

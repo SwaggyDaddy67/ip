@@ -17,7 +17,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SRC_DIR = REPO_ROOT / "src" / "main" / "java"
 BUILD_DIR = REPO_ROOT / "_temp" / "ui-test-classes"
-MAIN_CLASS = "GLaDOS"
+MAIN_CLASS = "glados.GLaDOS"
 
 TEST_HEADER_RE = re.compile(r"^## (.+)$", re.MULTILINE)
 AIM_RE = re.compile(r"\*\*Aim:\*\*\s*(.+?)\n\n", re.DOTALL)
@@ -53,7 +53,7 @@ def parse_plan(plan_text):
 
 def compile_sources():
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
-    java_files = [str(p) for p in SRC_DIR.glob("*.java")]
+    java_files = [str(p) for p in SRC_DIR.rglob("*.java")]
     result = subprocess.run(
         ["javac", "-d", str(BUILD_DIR), *java_files],
         capture_output=True, text=True,
