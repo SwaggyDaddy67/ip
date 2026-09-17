@@ -77,46 +77,35 @@ public class GLaDOS {
         while (!input.equals(COMMAND_BYE)) {
             System.out.println(DIVIDER);
 
-            if (input.equals(COMMAND_LIST)) {
-                System.out.println(INDENT + "Here are the tasks in your list:");
-                for (int i = 0; i < taskCount; i++) {
-                    System.out.println(INDENT + (i + 1) + "." + tasks[i]);
-                }
-            } else if (input.equals(COMMAND_MARK) || input.startsWith(COMMAND_MARK + " ")) {
-                int index = parseTaskIndex(input, COMMAND_MARK, taskCount);
-                if (index != -1) {
+            try {
+                if (input.equals(COMMAND_LIST)) {
+                    System.out.println(INDENT + "Here are the tasks in your list:");
+                    for (int i = 0; i < taskCount; i++) {
+                        System.out.println(INDENT + (i + 1) + "." + tasks[i]);
+                    }
+                } else if (input.equals(COMMAND_MARK) || input.startsWith(COMMAND_MARK + " ")) {
+                    int index = parseTaskIndex(input, COMMAND_MARK, taskCount);
                     tasks[index].markAsDone();
                     System.out.println(INDENT + "Nice! I've marked this task as done:");
                     System.out.println(INDENT + "  " + tasks[index]);
-                }
-            } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
-                int index = parseTaskIndex(input, COMMAND_UNMARK, taskCount);
-                if (index != -1) {
+                } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
+                    int index = parseTaskIndex(input, COMMAND_UNMARK, taskCount);
                     tasks[index].markAsNotDone();
                     System.out.println(INDENT + "OK, I've marked this task as not done yet:");
                     System.out.println(INDENT + "  " + tasks[index]);
-                }
-            } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
-                String description = input.substring(COMMAND_TODO.length()).trim();
-                if (description.isEmpty()) {
-                    System.out.println(INDENT
-                            + "A todo with no description. Try again, with words this time.");
+                } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
+                    taskCount = addTask(tasks, taskCount, parseTodo(input));
+                } else if (input.equals(COMMAND_DEADLINE)
+                        || input.startsWith(COMMAND_DEADLINE + " ")) {
+                    taskCount = addTask(tasks, taskCount, parseDeadline(input));
+                } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
+                    taskCount = addTask(tasks, taskCount, parseEvent(input));
                 } else {
-                    taskCount = addTask(tasks, taskCount, new Todo(description));
+                    throw new GLaDOSException("I have no idea what that was. Try one of: "
+                            + "list, todo, deadline, event, mark, unmark, bye.");
                 }
-            } else if (input.equals(COMMAND_DEADLINE) || input.startsWith(COMMAND_DEADLINE + " ")) {
-                Deadline deadline = parseDeadline(input);
-                if (deadline != null) {
-                    taskCount = addTask(tasks, taskCount, deadline);
-                }
-            } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
-                Event event = parseEvent(input);
-                if (event != null) {
-                    taskCount = addTask(tasks, taskCount, event);
-                }
-            } else {
-                System.out.println(INDENT + "I have no idea what that was. Try one of: "
-                        + "list, todo, deadline, event, mark, unmark, bye.");
+            } catch (GLaDOSException e) {
+                System.out.println(INDENT + e.getMessage());
             }
 
             System.out.println(DIVIDER);
@@ -130,30 +119,45 @@ public class GLaDOS {
 
     /**
      * Parses the task number after a command word, e.g. "mark 2", into a 0-based index.
-     * Prints an error and returns -1 if no number was given, it is not a number, or no
-     * such task exists.
+     *
+     * @param input the full command entered by the user.
+     * @param commandWord the command word to strip off, e.g. "mark".
+     * @param taskCount how many tasks exist, used to check the number is in range.
+     * @throws GLaDOSException if no number was given, it is not a number, or no such task exists.
      */
-    private static int parseTaskIndex(String input, String commandWord, int taskCount) {
+    private static int parseTaskIndex(String input, String commandWord, int taskCount)
+            throws GLaDOSException {
         String argument = input.substring(commandWord.length()).trim();
         if (argument.isEmpty()) {
-            System.out.println(INDENT + "Which task? Give me a number, like " + commandWord + " 2.");
-            return -1;
+            throw new GLaDOSException("Which task? Give me a number, like " + commandWord + " 2.");
         }
 
         int taskNumber;
         try {
             taskNumber = Integer.parseInt(argument);
         } catch (NumberFormatException e) {
-            System.out.println(INDENT + "\"" + argument + "\" is not a task number.");
-            return -1;
+            throw new GLaDOSException("\"" + argument + "\" is not a task number.");
         }
 
         if (taskNumber < 1 || taskNumber > taskCount) {
-            System.out.println(INDENT + "There is no task " + taskNumber
+            throw new GLaDOSException("There is no task " + taskNumber
                     + ". Your list has " + taskCount + ".");
-            return -1;
         }
         return taskNumber - 1;
+    }
+
+    /**
+     * Parses a todo command into a Todo task.
+     *
+     * @param input the full command, e.g. "todo read book".
+     * @throws GLaDOSException if no description was given after the command word.
+     */
+    private static Todo parseTodo(String input) throws GLaDOSException {
+        String description = input.substring(COMMAND_TODO.length()).trim();
+        if (description.isEmpty()) {
+            throw new GLaDOSException("A todo with no description. Try again, with words this time.");
+        }
+        return new Todo(description);
     }
 
     /**
@@ -172,58 +176,55 @@ public class GLaDOS {
 
     /**
      * Parses a deadline command into a Deadline task.
-     * Prints an error and returns null if /by is missing, or either part around it is empty.
+     *
+     * @param input the full command, e.g. "deadline return book /by Sunday".
+     * @throws GLaDOSException if the /by is missing, or either part around it is empty.
      */
-    private static Deadline parseDeadline(String input) {
+    private static Deadline parseDeadline(String input) throws GLaDOSException {
         String details = input.substring(COMMAND_DEADLINE.length()).trim();
         int byIndex = details.indexOf(DELIMITER_BY);
         if (byIndex == -1) {
-            System.out.println(INDENT + "A deadline needs a /by. Try: deadline return book /by Sunday.");
-            return null;
+            throw new GLaDOSException("A deadline needs a /by. "
+                    + "Try: deadline return book /by Sunday.");
         }
 
         String description = details.substring(0, byIndex).trim();
         String by = details.substring(byIndex + DELIMITER_BY.length()).trim();
         if (description.isEmpty()) {
-            System.out.println(INDENT + "A deadline with no description. What am I meant to track?");
-            return null;
+            throw new GLaDOSException("A deadline with no description. What am I meant to track?");
         }
         if (by.isEmpty()) {
-            System.out.println(INDENT + "You left the /by empty. When is this due?");
-            return null;
+            throw new GLaDOSException("You left the /by empty. When is this due?");
         }
         return new Deadline(description, by);
     }
 
     /**
      * Parses an event command into an Event task.
-     * Prints an error and returns null if /from or /to is missing or out of order, or any
-     * part around them is empty.
+     *
+     * @param input the full command, e.g. "event meeting /from Mon 2pm /to 4pm".
+     * @throws GLaDOSException if /from or /to is missing or out of order, or any part is empty.
      */
-    private static Event parseEvent(String input) {
+    private static Event parseEvent(String input) throws GLaDOSException {
         String details = input.substring(COMMAND_EVENT.length()).trim();
         int fromIndex = details.indexOf(DELIMITER_FROM);
         int toIndex = details.indexOf(DELIMITER_TO);
         if (fromIndex == -1 || toIndex == -1) {
-            System.out.println(INDENT + "An event needs both a /from and a /to. "
+            throw new GLaDOSException("An event needs both a /from and a /to. "
                     + "Try: event meeting /from Mon 2pm /to 4pm.");
-            return null;
         }
         if (toIndex < fromIndex) {
-            System.out.println(INDENT + "The /to has to come after the /from.");
-            return null;
+            throw new GLaDOSException("The /to has to come after the /from.");
         }
 
         String description = details.substring(0, fromIndex).trim();
         String from = details.substring(fromIndex + DELIMITER_FROM.length(), toIndex).trim();
         String to = details.substring(toIndex + DELIMITER_TO.length()).trim();
         if (description.isEmpty()) {
-            System.out.println(INDENT + "An event with no description. What am I meant to track?");
-            return null;
+            throw new GLaDOSException("An event with no description. What am I meant to track?");
         }
         if (from.isEmpty() || to.isEmpty()) {
-            System.out.println(INDENT + "An event needs both a start and an end time.");
-            return null;
+            throw new GLaDOSException("An event needs both a start and an end time.");
         }
         return new Event(description, from, to);
     }
