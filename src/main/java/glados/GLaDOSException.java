@@ -1,3 +1,5 @@
+package glados;
+
 /**
  * Represents an error specific to GLaDOS, such as a command the user entered
  * incorrectly.

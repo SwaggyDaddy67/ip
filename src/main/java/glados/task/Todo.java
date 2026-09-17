@@ -1,3 +1,5 @@
+package glados.task;
+
 /**
  * Represents a todo: a task with no date or time attached to it.
  */

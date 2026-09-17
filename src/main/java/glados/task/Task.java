@@ -1,3 +1,5 @@
+package glados.task;
+
 /**
  * Represents a single task in the task list.
  *

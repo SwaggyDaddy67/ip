@@ -1,3 +1,5 @@
+package glados.task;
+
 /**
  * Represents an event: a task that starts and ends at specific date/times.
  */

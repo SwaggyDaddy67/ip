@@ -1,3 +1,10 @@
+package glados;
+
+import glados.task.Deadline;
+import glados.task.Event;
+import glados.task.Task;
+import glados.task.Todo;
+
 import java.util.Scanner;
 
 /**
