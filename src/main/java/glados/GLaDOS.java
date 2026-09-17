@@ -5,19 +5,26 @@ import glados.task.Event;
 import glados.task.Task;
 import glados.task.Todo;
 
+import java.nio.file.Path;
 import java.util.Scanner;
 
 /**
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
  *
  * <p>Supports adding a todo, deadline, or event task, listing all tasks, and
- * marking a task as done or not done. The conversation ends when the user
- * enters the exit command.
+ * marking a task as done or not done. The task list is saved to disk after
+ * every change. The conversation ends when the user enters the exit command.
  */
 public class GLaDOS {
 
     /** Maximum number of tasks that can be stored. */
     private static final int MAX_TASKS = 100;
+
+    /**
+     * Where the task list is saved: data/glados.txt, relative to the folder the program runs in.
+     * Path.of joins the parts with the separator of the current OS, so this works on any OS.
+     */
+    private static final Path DATA_FILE = Path.of("data", "glados.txt");
 
     /** Command that ends the conversation. */
     private static final String COMMAND_BYE = "bye";
@@ -77,6 +84,7 @@ public class GLaDOS {
 
         Task[] tasks = new Task[MAX_TASKS];
         int taskCount = 0;
+        Storage storage = new Storage(DATA_FILE);
 
         Scanner in = new Scanner(System.in);
         String input = in.nextLine();
@@ -95,18 +103,23 @@ public class GLaDOS {
                     tasks[index].markAsDone();
                     System.out.println(INDENT + "Nice! I've marked this task as done:");
                     System.out.println(INDENT + "  " + tasks[index]);
+                    storage.save(tasks, taskCount);
                 } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
                     int index = parseTaskIndex(input, COMMAND_UNMARK, taskCount);
                     tasks[index].markAsNotDone();
                     System.out.println(INDENT + "OK, I've marked this task as not done yet:");
                     System.out.println(INDENT + "  " + tasks[index]);
+                    storage.save(tasks, taskCount);
                 } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
                     taskCount = addTask(tasks, taskCount, parseTodo(input));
+                    storage.save(tasks, taskCount);
                 } else if (input.equals(COMMAND_DEADLINE)
                         || input.startsWith(COMMAND_DEADLINE + " ")) {
                     taskCount = addTask(tasks, taskCount, parseDeadline(input));
+                    storage.save(tasks, taskCount);
                 } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
                     taskCount = addTask(tasks, taskCount, parseEvent(input));
+                    storage.save(tasks, taskCount);
                 } else {
                     throw new GLaDOSException("I have no idea what that was. Try one of: "
                             + "list, todo, deadline, event, mark, unmark, bye.");

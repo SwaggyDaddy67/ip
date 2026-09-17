@@ -17,6 +17,14 @@ public class Deadline extends Task {
         this.by = by;
     }
 
+    /**
+     * Returns this deadline as a data file line, e.g. "D | 0 | return book | Sunday".
+     */
+    @Override
+    public String toFileString() {
+        return "D | " + super.toFileString() + " | " + by;
+    }
+
     @Override
     public String toString() {
         return "[D]" + super.toString() + " (by: " + by + ")";

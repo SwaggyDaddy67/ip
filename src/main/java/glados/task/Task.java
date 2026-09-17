@@ -45,6 +45,21 @@ public class Task {
     }
 
     /**
+     * Returns this task formatted as a line of the data file, e.g. "1 | read book".
+     *
+     * <p>Subclasses put their type letter in front and append their own fields.
+     */
+    public String toFileString() {
+        String doneFlag;
+        if (isDone) {
+            doneFlag = "1";
+        } else {
+            doneFlag = "0";
+        }
+        return doneFlag + " | " + description;
+    }
+
+    /**
      * Returns this task formatted as shown to the user, e.g. "[X] read book".
      */
     @Override

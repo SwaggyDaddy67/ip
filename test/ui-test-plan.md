@@ -5,6 +5,12 @@ Each test case runs GLaDOS with a fixed sequence of typed commands (the
 output** block, character for character (line-ending differences between
 Windows and Unix are ignored).
 
+Each test runs in a fresh, empty folder, so it starts with no saved tasks.
+A test can optionally add a **Data file before:** block (written to
+`data/glados.txt` before the run, to test loading) and a **Data file
+after:** block (the exact contents `data/glados.txt` must have once the run
+ends, to test saving).
+
 Update this file whenever a command's input format or reply wording
 changes, so the test-ui skill keeps checking against current behaviour.
 
@@ -12,7 +18,8 @@ changes, so the test-ui skill keeps checking against current behaviour.
 
 **Aim:** Verify that all three task types can be added, that `list` shows
 each one formatted with its type letter and status box, and that `mark`
-and `unmark` both update the status shown afterwards.
+and `unmark` both update the status shown afterwards. Also verify that the
+saved data file holds every task, in order, with its latest done status.
 
 **Input:**
 ```text
@@ -76,6 +83,13 @@ bye
     ____________________________________________________________
      Test concluded. Try not to disappoint me next time.
     ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 0 | read book
+D | 0 | return book | June 6th
+E | 0 | project meeting | Aug 6th 2pm | 4pm
 ```
 
 ## Test 2: Reject a todo with no description
@@ -173,7 +187,8 @@ bye
 
 **Aim:** Verify that `mark` with no number, a non-numeric argument, and an
 out-of-range number are each rejected with their own message rather than
-crashing, and that a valid `mark` still works afterwards.
+crashing, and that a valid `mark` still works afterwards and is saved as
+done (`1`) in the data file.
 
 **Input:**
 ```text
@@ -223,6 +238,11 @@ bye
     ____________________________________________________________
      Test concluded. Try not to disappoint me next time.
     ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 1 | read book
 ```
 
 ## Test 5: Reject malformed deadline and event input
