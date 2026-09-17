@@ -56,6 +56,9 @@ public class GLaDOS {
     /** Separates an event's start time from its end time. */
     private static final String DELIMITER_TO = "/to";
 
+    /** Separates fields in the data file, so it cannot appear inside a task. */
+    private static final String RESERVED_CHARACTER = "|";
+
     /** Indentation placed before every line of GLaDOS's replies. */
     private static final String INDENT = "     ";
 
@@ -90,6 +93,13 @@ public class GLaDOS {
         } catch (GLaDOSException e) {
             System.out.println(DIVIDER);
             System.out.println(INDENT + e.getMessage());
+            System.out.println(DIVIDER);
+        }
+        if (storage.getCorruptedLineCount() > 0) {
+            System.out.println(DIVIDER);
+            System.out.println(INDENT + "Your save file is damaged. I skipped "
+                    + storage.getCorruptedLineCount() + " unreadable line(s).");
+            System.out.println(INDENT + "They will be gone for good the next time I save.");
             System.out.println(DIVIDER);
         }
 
@@ -174,12 +184,25 @@ public class GLaDOS {
     }
 
     /**
+     * Rejects task input containing the character used to separate fields in the data file.
+     *
+     * @throws GLaDOSException if input contains that character.
+     */
+    private static void checkNoReservedCharacter(String input) throws GLaDOSException {
+        if (input.contains(RESERVED_CHARACTER)) {
+            throw new GLaDOSException("The " + RESERVED_CHARACTER
+                    + " character is reserved for my records. Leave it out.");
+        }
+    }
+
+    /**
      * Parses a todo command into a Todo task.
      *
      * @param input the full command, e.g. "todo read book".
-     * @throws GLaDOSException if no description was given after the command word.
+     * @throws GLaDOSException if no description was given, or it contains a reserved character.
      */
     private static Todo parseTodo(String input) throws GLaDOSException {
+        checkNoReservedCharacter(input);
         String description = input.substring(COMMAND_TODO.length()).trim();
         if (description.isEmpty()) {
             throw new GLaDOSException("A todo with no description. Try again, with words this time.");
@@ -205,9 +228,11 @@ public class GLaDOS {
      * Parses a deadline command into a Deadline task.
      *
      * @param input the full command, e.g. "deadline return book /by Sunday".
-     * @throws GLaDOSException if the /by is missing, or either part around it is empty.
+     * @throws GLaDOSException if the /by is missing, either part around it is empty,
+     *         or the input contains a reserved character.
      */
     private static Deadline parseDeadline(String input) throws GLaDOSException {
+        checkNoReservedCharacter(input);
         String details = input.substring(COMMAND_DEADLINE.length()).trim();
         int byIndex = details.indexOf(DELIMITER_BY);
         if (byIndex == -1) {
@@ -230,9 +255,11 @@ public class GLaDOS {
      * Parses an event command into an Event task.
      *
      * @param input the full command, e.g. "event meeting /from Mon 2pm /to 4pm".
-     * @throws GLaDOSException if /from or /to is missing or out of order, or any part is empty.
+     * @throws GLaDOSException if /from or /to is missing or out of order, any part is empty,
+     *         or the input contains a reserved character.
      */
     private static Event parseEvent(String input) throws GLaDOSException {
+        checkNoReservedCharacter(input);
         String details = input.substring(COMMAND_EVENT.length()).trim();
         int fromIndex = details.indexOf(DELIMITER_FROM);
         int toIndex = details.indexOf(DELIMITER_TO);

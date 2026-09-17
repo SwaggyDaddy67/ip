@@ -361,3 +361,117 @@ D | 0 | return book | June 6th
 E | 0 | project meeting | Aug 6th 2pm | 4pm
 T | 0 | join sports club
 ```
+
+## Test 7: Skip corrupted lines in the data file
+
+**Aim:** Verify that lines in the data file with an unknown type letter, a
+missing field, an invalid done flag, or an empty description, and lines that
+are not tasks at all, are skipped and reported, while blank lines are
+ignored and valid lines still load. Also verify that the next save rewrites
+the file with only the valid tasks.
+
+**Data file before:**
+```text
+T | 1 | read book
+X | 0 | unknown type
+D | 0 | missing date
+E | 2 | bad flag | Mon | Tue
+T | 0 | 
+
+not a task at all
+D | 0 | return book | June 6th
+```
+
+**Input:**
+```text
+list
+todo join sports club
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Your save file is damaged. I skipped 5 unreadable line(s).
+     They will be gone for good the next time I save.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][X] read book
+     2.[D][ ] return book (by: June 6th)
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] join sports club
+     Now you have 3 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 1 | read book
+D | 0 | return book | June 6th
+T | 0 | join sports club
+```
+
+## Test 8: Reject the reserved | character in new tasks
+
+**Aim:** Verify that a todo, deadline, or event containing `|` (the data
+file's field separator) is rejected rather than saved in a form that could
+not be loaded back, and that nothing is written to the data file.
+
+**Input:**
+```text
+todo read | book
+deadline return book /by June|6th
+event meeting /from Mon /to Tue|Wed
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     The | character is reserved for my records. Leave it out.
+    ____________________________________________________________
+    ____________________________________________________________
+     The | character is reserved for my records. Leave it out.
+    ____________________________________________________________
+    ____________________________________________________________
+     The | character is reserved for my records. Leave it out.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+(data file does not exist)
+```

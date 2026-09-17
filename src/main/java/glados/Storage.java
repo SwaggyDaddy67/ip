@@ -20,6 +20,9 @@ import java.util.List;
 public class Storage {
     private final Path filePath;
 
+    /** How many lines the last load skipped because they were not in the expected format. */
+    private int corruptedLineCount = 0;
+
     /**
      * Creates a storage that reads and writes the given file.
      *
@@ -33,13 +36,16 @@ public class Storage {
      * Fills tasks with the tasks saved in the data file.
      *
      * <p>If the file does not exist yet (e.g. the first time the program runs),
-     * nothing is loaded and the list starts empty.
+     * nothing is loaded and the list starts empty. Blank lines are ignored, and
+     * lines not in the expected format are skipped and counted, see
+     * {@link #getCorruptedLineCount()}.
      *
      * @param tasks the array to fill, starting from index 0.
      * @return how many tasks were loaded.
      * @throws GLaDOSException if the file exists but could not be read.
      */
     public int load(Task[] tasks) throws GLaDOSException {
+        corruptedLineCount = 0;
         if (!Files.exists(filePath)) {
             return 0;
         }
@@ -53,32 +59,63 @@ public class Storage {
 
         int taskCount = 0;
         for (String line : lines) {
-            tasks[taskCount] = parseTask(line);
-            taskCount++;
+            if (line.isBlank()) {
+                continue;
+            }
+            try {
+                tasks[taskCount] = parseTask(line);
+                taskCount++;
+            } catch (GLaDOSException e) {
+                corruptedLineCount++;
+            }
         }
         return taskCount;
     }
 
     /**
-     * Turns one data file line, e.g. "D | 1 | return book | Sunday", back into a task.
+     * Returns how many lines the last call to {@link #load(Task[])} skipped as corrupted.
      */
-    private static Task parseTask(String line) {
+    public int getCorruptedLineCount() {
+        return corruptedLineCount;
+    }
+
+    /**
+     * Turns one data file line, e.g. "D | 1 | return book | Sunday", back into a task.
+     *
+     * @throws GLaDOSException if the line is not in the expected format.
+     */
+    private static Task parseTask(String line) throws GLaDOSException {
         // split takes a regular expression, where | has a special meaning, so it is escaped.
-        String[] parts = line.split(" \\| ");
+        // The -1 keeps empty trailing fields, so "T | 0 | " is caught as having an empty description.
+        String[] parts = line.split(" \\| ", -1);
+        for (String part : parts) {
+            if (part.isBlank()) {
+                throw new GLaDOSException("Empty field in line: " + line);
+            }
+        }
+        if (parts.length < 3) {
+            throw new GLaDOSException("Too few fields in line: " + line);
+        }
+
         String type = parts[0];
+        String doneFlag = parts[1];
         String description = parts[2];
 
         Task task;
-        if (type.equals("T")) {
+        if (type.equals("T") && parts.length == 3) {
             task = new Todo(description);
-        } else if (type.equals("D")) {
+        } else if (type.equals("D") && parts.length == 4) {
             task = new Deadline(description, parts[3]);
-        } else {
+        } else if (type.equals("E") && parts.length == 5) {
             task = new Event(description, parts[3], parts[4]);
+        } else {
+            throw new GLaDOSException("Unknown type or wrong number of fields in line: " + line);
         }
 
-        if (parts[1].equals("1")) {
+        if (doneFlag.equals("1")) {
             task.markAsDone();
+        } else if (!doneFlag.equals("0")) {
+            throw new GLaDOSException("Done flag is not 0 or 1 in line: " + line);
         }
         return task;
     }
