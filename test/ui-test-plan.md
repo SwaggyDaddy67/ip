@@ -224,3 +224,51 @@ bye
      Test concluded. Try not to disappoint me next time.
     ____________________________________________________________
 ```
+
+## Test 5: Reject malformed deadline and event input
+
+**Aim:** Verify that a deadline missing its `/by` and an event missing its
+`/to` are each rejected with a message naming the correct format, rather
+than crashing, and that a well-formed deadline entered afterwards is still
+added correctly.
+
+**Input:**
+```text
+deadline return book
+event meeting /from Mon
+deadline return book /by Sunday
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     A deadline needs a /by. Try: deadline return book /by Sunday.
+    ____________________________________________________________
+    ____________________________________________________________
+     An event needs both a /from and a /to. Try: event meeting /from Mon 2pm /to 4pm.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [D][ ] return book (by: Sunday)
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[D][ ] return book (by: Sunday)
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```

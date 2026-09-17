@@ -27,20 +27,20 @@ public class GLaDOS {
     /** Command word that adds a todo task, e.g. "todo read book". */
     private static final String COMMAND_TODO = "todo";
 
-    /** Prefix of the command that adds a deadline task. */
-    private static final String COMMAND_DEADLINE = "deadline ";
+    /** Command word that adds a deadline task, e.g. "deadline return book /by Sunday". */
+    private static final String COMMAND_DEADLINE = "deadline";
 
-    /** Prefix of the command that adds an event task. */
-    private static final String COMMAND_EVENT = "event ";
+    /** Command word that adds an event task, e.g. "event meeting /from Mon 2pm /to 4pm". */
+    private static final String COMMAND_EVENT = "event";
 
-    /** Separates a deadline's description from its due date, e.g. "return book /by Sunday". */
-    private static final String DELIMITER_BY = " /by ";
+    /** Separates a deadline's description from its due date. */
+    private static final String DELIMITER_BY = "/by";
 
-    /** Separates an event's description from its start time, e.g. "meeting /from Mon 2pm". */
-    private static final String DELIMITER_FROM = " /from ";
+    /** Separates an event's description from its start time. */
+    private static final String DELIMITER_FROM = "/from";
 
-    /** Separates an event's start time from its end time, e.g. "Mon 2pm /to 4pm". */
-    private static final String DELIMITER_TO = " /to ";
+    /** Separates an event's start time from its end time. */
+    private static final String DELIMITER_TO = "/to";
 
     /** Indentation placed before every line of GLaDOS's replies. */
     private static final String INDENT = "     ";
@@ -104,12 +104,16 @@ public class GLaDOS {
                 } else {
                     taskCount = addTask(tasks, taskCount, new Todo(description));
                 }
-            } else if (input.startsWith(COMMAND_DEADLINE)) {
-                String details = input.substring(COMMAND_DEADLINE.length());
-                taskCount = addTask(tasks, taskCount, parseDeadline(details));
-            } else if (input.startsWith(COMMAND_EVENT)) {
-                String details = input.substring(COMMAND_EVENT.length());
-                taskCount = addTask(tasks, taskCount, parseEvent(details));
+            } else if (input.equals(COMMAND_DEADLINE) || input.startsWith(COMMAND_DEADLINE + " ")) {
+                Deadline deadline = parseDeadline(input);
+                if (deadline != null) {
+                    taskCount = addTask(tasks, taskCount, deadline);
+                }
+            } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
+                Event event = parseEvent(input);
+                if (event != null) {
+                    taskCount = addTask(tasks, taskCount, event);
+                }
             } else {
                 System.out.println(INDENT + "I have no idea what that was. Try one of: "
                         + "list, todo, deadline, event, mark, unmark, bye.");
@@ -166,21 +170,61 @@ public class GLaDOS {
         return taskCount;
     }
 
-    /** Parses the text after "deadline " into a Deadline task. */
-    private static Deadline parseDeadline(String details) {
+    /**
+     * Parses a deadline command into a Deadline task.
+     * Prints an error and returns null if /by is missing, or either part around it is empty.
+     */
+    private static Deadline parseDeadline(String input) {
+        String details = input.substring(COMMAND_DEADLINE.length()).trim();
         int byIndex = details.indexOf(DELIMITER_BY);
-        String description = details.substring(0, byIndex);
-        String by = details.substring(byIndex + DELIMITER_BY.length());
+        if (byIndex == -1) {
+            System.out.println(INDENT + "A deadline needs a /by. Try: deadline return book /by Sunday.");
+            return null;
+        }
+
+        String description = details.substring(0, byIndex).trim();
+        String by = details.substring(byIndex + DELIMITER_BY.length()).trim();
+        if (description.isEmpty()) {
+            System.out.println(INDENT + "A deadline with no description. What am I meant to track?");
+            return null;
+        }
+        if (by.isEmpty()) {
+            System.out.println(INDENT + "You left the /by empty. When is this due?");
+            return null;
+        }
         return new Deadline(description, by);
     }
 
-    /** Parses the text after "event " into an Event task. */
-    private static Event parseEvent(String details) {
+    /**
+     * Parses an event command into an Event task.
+     * Prints an error and returns null if /from or /to is missing or out of order, or any
+     * part around them is empty.
+     */
+    private static Event parseEvent(String input) {
+        String details = input.substring(COMMAND_EVENT.length()).trim();
         int fromIndex = details.indexOf(DELIMITER_FROM);
         int toIndex = details.indexOf(DELIMITER_TO);
-        String description = details.substring(0, fromIndex);
-        String from = details.substring(fromIndex + DELIMITER_FROM.length(), toIndex);
-        String to = details.substring(toIndex + DELIMITER_TO.length());
+        if (fromIndex == -1 || toIndex == -1) {
+            System.out.println(INDENT + "An event needs both a /from and a /to. "
+                    + "Try: event meeting /from Mon 2pm /to 4pm.");
+            return null;
+        }
+        if (toIndex < fromIndex) {
+            System.out.println(INDENT + "The /to has to come after the /from.");
+            return null;
+        }
+
+        String description = details.substring(0, fromIndex).trim();
+        String from = details.substring(fromIndex + DELIMITER_FROM.length(), toIndex).trim();
+        String to = details.substring(toIndex + DELIMITER_TO.length()).trim();
+        if (description.isEmpty()) {
+            System.out.println(INDENT + "An event with no description. What am I meant to track?");
+            return null;
+        }
+        if (from.isEmpty() || to.isEmpty()) {
+            System.out.println(INDENT + "An event needs both a start and an end time.");
+            return null;
+        }
         return new Event(description, from, to);
     }
 }
