@@ -168,3 +168,59 @@ bye
      Test concluded. Try not to disappoint me next time.
     ____________________________________________________________
 ```
+
+## Test 4: Reject invalid mark arguments, then mark successfully
+
+**Aim:** Verify that `mark` with no number, a non-numeric argument, and an
+out-of-range number are each rejected with their own message rather than
+crashing, and that a valid `mark` still works afterwards.
+
+**Input:**
+```text
+todo read book
+mark
+mark abc
+mark 999
+mark 1
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Which task? Give me a number, like mark 2.
+    ____________________________________________________________
+    ____________________________________________________________
+     "abc" is not a task number.
+    ____________________________________________________________
+    ____________________________________________________________
+     There is no task 999. Your list has 1.
+    ____________________________________________________________
+    ____________________________________________________________
+     Nice! I've marked this task as done:
+       [T][X] read book
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][X] read book
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```

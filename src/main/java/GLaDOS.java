@@ -18,11 +18,11 @@ public class GLaDOS {
     /** Command that lists every stored task. */
     private static final String COMMAND_LIST = "list";
 
-    /** Prefix of the command that marks a task as done, e.g. "mark 2". */
-    private static final String COMMAND_MARK = "mark ";
+    /** Command word that marks a task as done, e.g. "mark 2". */
+    private static final String COMMAND_MARK = "mark";
 
-    /** Prefix of the command that marks a task as not done, e.g. "unmark 2". */
-    private static final String COMMAND_UNMARK = "unmark ";
+    /** Command word that marks a task as not done, e.g. "unmark 2". */
+    private static final String COMMAND_UNMARK = "unmark";
 
     /** Command word that adds a todo task, e.g. "todo read book". */
     private static final String COMMAND_TODO = "todo";
@@ -82,16 +82,20 @@ public class GLaDOS {
                 for (int i = 0; i < taskCount; i++) {
                     System.out.println(INDENT + (i + 1) + "." + tasks[i]);
                 }
-            } else if (input.startsWith(COMMAND_MARK)) {
-                int index = parseTaskIndex(input, COMMAND_MARK);
-                tasks[index].markAsDone();
-                System.out.println(INDENT + "Nice! I've marked this task as done:");
-                System.out.println(INDENT + "  " + tasks[index]);
-            } else if (input.startsWith(COMMAND_UNMARK)) {
-                int index = parseTaskIndex(input, COMMAND_UNMARK);
-                tasks[index].markAsNotDone();
-                System.out.println(INDENT + "OK, I've marked this task as not done yet:");
-                System.out.println(INDENT + "  " + tasks[index]);
+            } else if (input.equals(COMMAND_MARK) || input.startsWith(COMMAND_MARK + " ")) {
+                int index = parseTaskIndex(input, COMMAND_MARK, taskCount);
+                if (index != -1) {
+                    tasks[index].markAsDone();
+                    System.out.println(INDENT + "Nice! I've marked this task as done:");
+                    System.out.println(INDENT + "  " + tasks[index]);
+                }
+            } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
+                int index = parseTaskIndex(input, COMMAND_UNMARK, taskCount);
+                if (index != -1) {
+                    tasks[index].markAsNotDone();
+                    System.out.println(INDENT + "OK, I've marked this task as not done yet:");
+                    System.out.println(INDENT + "  " + tasks[index]);
+                }
             } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
                 String description = input.substring(COMMAND_TODO.length()).trim();
                 if (description.isEmpty()) {
@@ -120,9 +124,32 @@ public class GLaDOS {
         System.out.println(DIVIDER);
     }
 
-    /** Parses the task number after a command word, e.g. "mark 2", into a 0-based index. */
-    private static int parseTaskIndex(String input, String commandPrefix) {
-        return Integer.parseInt(input.substring(commandPrefix.length())) - 1;
+    /**
+     * Parses the task number after a command word, e.g. "mark 2", into a 0-based index.
+     * Prints an error and returns -1 if no number was given, it is not a number, or no
+     * such task exists.
+     */
+    private static int parseTaskIndex(String input, String commandWord, int taskCount) {
+        String argument = input.substring(commandWord.length()).trim();
+        if (argument.isEmpty()) {
+            System.out.println(INDENT + "Which task? Give me a number, like " + commandWord + " 2.");
+            return -1;
+        }
+
+        int taskNumber;
+        try {
+            taskNumber = Integer.parseInt(argument);
+        } catch (NumberFormatException e) {
+            System.out.println(INDENT + "\"" + argument + "\" is not a task number.");
+            return -1;
+        }
+
+        if (taskNumber < 1 || taskNumber > taskCount) {
+            System.out.println(INDENT + "There is no task " + taskNumber
+                    + ". Your list has " + taskCount + ".");
+            return -1;
+        }
+        return taskNumber - 1;
     }
 
     /**
