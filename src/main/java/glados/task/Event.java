@@ -20,6 +20,14 @@ public class Event extends Task {
         this.to = to;
     }
 
+    /**
+     * Returns this event as a data file line, e.g. "E | 0 | meeting | Mon 2pm | 4pm".
+     */
+    @Override
+    public String toFileString() {
+        return "E | " + super.toFileString() + " | " + from + " | " + to;
+    }
+
     @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";

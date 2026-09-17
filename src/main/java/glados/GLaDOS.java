@@ -5,6 +5,7 @@ import glados.task.Event;
 import glados.task.Task;
 import glados.task.Todo;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -12,10 +13,17 @@ import java.util.Scanner;
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
  *
  * <p>Supports adding a todo, deadline, or event task, listing all tasks,
- * marking a task as done or not done, and deleting a task. The conversation ends when the user
- * enters the exit command.
+ * marking a task as done or not done, and deleting a task. The task list is
+ * loaded from disk at startup and saved after every change. The conversation
+ * ends when the user enters the exit command.
  */
 public class GLaDOS {
+
+    /**
+     * Where the task list is saved: data/glados.txt, relative to the folder the program runs in.
+     * Path.of joins the parts with the separator of the current OS, so this works on any OS.
+     */
+    private static final Path DATA_FILE = Path.of("data", "glados.txt");
 
     /** Command that ends the conversation. */
     private static final String COMMAND_BYE = "bye";
@@ -50,6 +58,9 @@ public class GLaDOS {
     /** Separates an event's start time from its end time. */
     private static final String DELIMITER_TO = "/to";
 
+    /** Separates fields in the data file, so it cannot appear inside a task. */
+    private static final String RESERVED_CHARACTER = "|";
+
     /** Indentation placed before every line of GLaDOS's replies. */
     private static final String INDENT = "     ";
 
@@ -78,6 +89,21 @@ public class GLaDOS {
 
         // An ArrayList grows as needed, so there is no fixed task limit or separate count to track.
         ArrayList<Task> tasks = new ArrayList<>();
+        Storage storage = new Storage(DATA_FILE);
+        try {
+            tasks = storage.load();
+        } catch (GLaDOSException e) {
+            System.out.println(DIVIDER);
+            System.out.println(INDENT + e.getMessage());
+            System.out.println(DIVIDER);
+        }
+        if (storage.getCorruptedLineCount() > 0) {
+            System.out.println(DIVIDER);
+            System.out.println(INDENT + "Your save file is damaged. I skipped "
+                    + storage.getCorruptedLineCount() + " unreadable line(s).");
+            System.out.println(INDENT + "They will be gone for good the next time I save.");
+            System.out.println(DIVIDER);
+        }
 
         Scanner in = new Scanner(System.in);
         String input = in.nextLine();
@@ -96,24 +122,30 @@ public class GLaDOS {
                     task.markAsDone();
                     System.out.println(INDENT + "Nice! I've marked this task as done:");
                     System.out.println(INDENT + "  " + task);
+                    storage.save(tasks);
                 } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
                     Task task = tasks.get(parseTaskIndex(input, COMMAND_UNMARK, tasks.size()));
                     task.markAsNotDone();
                     System.out.println(INDENT + "OK, I've marked this task as not done yet:");
                     System.out.println(INDENT + "  " + task);
+                    storage.save(tasks);
                 } else if (input.equals(COMMAND_DELETE) || input.startsWith(COMMAND_DELETE + " ")) {
                     // remove(int) takes the task out and shifts every later task up by one.
                     Task task = tasks.remove(parseTaskIndex(input, COMMAND_DELETE, tasks.size()));
                     System.out.println(INDENT + "Noted. I've removed this task:");
                     System.out.println(INDENT + "  " + task);
                     System.out.println(INDENT + "Now you have " + tasks.size() + " tasks in the list.");
+                    storage.save(tasks);
                 } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
                     addTask(tasks, parseTodo(input));
+                    storage.save(tasks);
                 } else if (input.equals(COMMAND_DEADLINE)
                         || input.startsWith(COMMAND_DEADLINE + " ")) {
                     addTask(tasks, parseDeadline(input));
+                    storage.save(tasks);
                 } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
                     addTask(tasks, parseEvent(input));
+                    storage.save(tasks);
                 } else {
                     throw new GLaDOSException("I have no idea what that was. Try one of: "
                             + "list, todo, deadline, event, mark, unmark, delete, bye.");
@@ -161,12 +193,25 @@ public class GLaDOS {
     }
 
     /**
+     * Rejects task input containing the character used to separate fields in the data file.
+     *
+     * @throws GLaDOSException if input contains that character.
+     */
+    private static void checkNoReservedCharacter(String input) throws GLaDOSException {
+        if (input.contains(RESERVED_CHARACTER)) {
+            throw new GLaDOSException("The " + RESERVED_CHARACTER
+                    + " character is reserved for my records. Leave it out.");
+        }
+    }
+
+    /**
      * Parses a todo command into a Todo task.
      *
      * @param input the full command, e.g. "todo read book".
-     * @throws GLaDOSException if no description was given after the command word.
+     * @throws GLaDOSException if no description was given, or it contains a reserved character.
      */
     private static Todo parseTodo(String input) throws GLaDOSException {
+        checkNoReservedCharacter(input);
         String description = input.substring(COMMAND_TODO.length()).trim();
         if (description.isEmpty()) {
             throw new GLaDOSException("A todo with no description. Try again, with words this time.");
@@ -188,9 +233,11 @@ public class GLaDOS {
      * Parses a deadline command into a Deadline task.
      *
      * @param input the full command, e.g. "deadline return book /by Sunday".
-     * @throws GLaDOSException if the /by is missing, or either part around it is empty.
+     * @throws GLaDOSException if the /by is missing, either part around it is empty,
+     *         or the input contains a reserved character.
      */
     private static Deadline parseDeadline(String input) throws GLaDOSException {
+        checkNoReservedCharacter(input);
         String details = input.substring(COMMAND_DEADLINE.length()).trim();
         int byIndex = details.indexOf(DELIMITER_BY);
         if (byIndex == -1) {
@@ -213,9 +260,11 @@ public class GLaDOS {
      * Parses an event command into an Event task.
      *
      * @param input the full command, e.g. "event meeting /from Mon 2pm /to 4pm".
-     * @throws GLaDOSException if /from or /to is missing or out of order, or any part is empty.
+     * @throws GLaDOSException if /from or /to is missing or out of order, any part is empty,
+     *         or the input contains a reserved character.
      */
     private static Event parseEvent(String input) throws GLaDOSException {
+        checkNoReservedCharacter(input);
         String details = input.substring(COMMAND_EVENT.length()).trim();
         int fromIndex = details.indexOf(DELIMITER_FROM);
         int toIndex = details.indexOf(DELIMITER_TO);

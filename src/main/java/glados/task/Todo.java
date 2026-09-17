@@ -14,6 +14,14 @@ public class Todo extends Task {
         super(description);
     }
 
+    /**
+     * Returns this todo as a data file line, e.g. "T | 0 | read book".
+     */
+    @Override
+    public String toFileString() {
+        return "T | " + super.toFileString();
+    }
+
     @Override
     public String toString() {
         return "[T]" + super.toString();
