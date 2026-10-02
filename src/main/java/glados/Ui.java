@@ -112,6 +112,21 @@ public class Ui {
     }
 
     /**
+     * Shows the tasks that matched a search, numbered from 1, or says there are none.
+     *
+     * @param keyword the text searched for.
+     * @param matchingTasks the tasks whose description contains the keyword.
+     */
+    public void showMatchingTasks(String keyword, TaskList matchingTasks) {
+        if (matchingTasks.size() == 0) {
+            showMessage("No tasks match \"" + keyword + "\". Perhaps it never existed.");
+            return;
+        }
+        showMessage("Here are the matching tasks in your list:");
+        showNumberedTasks(matchingTasks);
+    }
+
+    /**
      * Shows the tasks that fall on a date, numbered from 1, or says there are none.
      *
      * @param date the date asked about.

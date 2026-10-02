@@ -4,6 +4,7 @@ import glados.task.Task;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Holds the user's tasks in order, with operations to add, remove, and look them up.
@@ -63,6 +64,22 @@ public class TaskList {
      */
     public int size() {
         return tasks.size();
+    }
+
+    /**
+     * Returns the tasks whose description contains the keyword, in list order.
+     * Upper and lower case are treated as the same, so "BOOK" finds "read book".
+     */
+    public TaskList find(String keyword) {
+        // Locale.ROOT makes the case change behave the same whatever language the computer uses.
+        String lowerCaseKeyword = keyword.toLowerCase(Locale.ROOT);
+        TaskList matchingTasks = new TaskList();
+        for (Task task : tasks) {
+            if (task.getDescription().toLowerCase(Locale.ROOT).contains(lowerCaseKeyword)) {
+                matchingTasks.add(task);
+            }
+        }
+        return matchingTasks;
     }
 
     /**

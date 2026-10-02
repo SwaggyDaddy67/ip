@@ -167,7 +167,7 @@ bye
      State your query. I have other tests to run.
     ____________________________________________________________
     ____________________________________________________________
-     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, delete, on, bye.
+     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, delete, find, on, bye.
     ____________________________________________________________
     ____________________________________________________________
      A todo with no description. Try again, with words this time.
@@ -829,4 +829,90 @@ E | 0 | camp | 2019-10-14 | 2019-10-17
 E | 0 | dinner | 2019-10-15 1900 | 2019-10-15 2100
 D | 0 | submit report | 2019-10-15 2359
 E | 0 | trip | 2019-10-16 | 2019-10-18
+```
+
+## Test 13: Find tasks by a keyword in their description
+
+**Aim:** Verify that `find` lists, in list order and numbered from 1, every
+task whose description contains the keyword, whatever its type or done
+status, ignoring upper and lower case. Also verify that a keyword may
+contain spaces, that spaces around it are ignored, that a keyword matching
+nothing says so, that a missing keyword is rejected, that only the
+description is searched (not dates), and that `find` does not change the
+data file.
+
+**Data file before:**
+```text
+T | 1 | read book
+D | 1 | return book | 2019-06-06
+E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
+T | 1 | join sports club
+T | 0 | borrow book
+```
+
+**Input:**
+```text
+find book
+find BOOK
+find return book
+find   meeting  
+find xyz
+find
+find 2019
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the matching tasks in your list:
+     1.[T][X] read book
+     2.[D][X] return book (by: Jun 06 2019)
+     3.[T][ ] borrow book
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the matching tasks in your list:
+     1.[T][X] read book
+     2.[D][X] return book (by: Jun 06 2019)
+     3.[T][ ] borrow book
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the matching tasks in your list:
+     1.[D][X] return book (by: Jun 06 2019)
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the matching tasks in your list:
+     1.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
+    ____________________________________________________________
+    ____________________________________________________________
+     No tasks match "xyz". Perhaps it never existed.
+    ____________________________________________________________
+    ____________________________________________________________
+     Find what? Give me a keyword, like find book.
+    ____________________________________________________________
+    ____________________________________________________________
+     No tasks match "2019". Perhaps it never existed.
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 1 | read book
+D | 1 | return book | 2019-06-06
+E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
+T | 1 | join sports club
+T | 0 | borrow book
 ```
