@@ -289,7 +289,7 @@ folder into the folder you start GLaDOS from there.
 ### Editing the data file
 
 Advanced users can edit `data/glados.txt` directly, in any text editor. Each
-line is one task, with fields separated by ` | `:
+line is one task, with fields separated by a `|` with a space on each side:
 
 ```
 T | 0 | read book
