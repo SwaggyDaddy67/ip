@@ -28,7 +28,15 @@ public class Ui {
             + "     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / \n"
             + "     \\____/_____/\\__,_/_____/\\____//____/  \n";
 
-    private final Scanner in = new Scanner(System.in);
+    /** Reads the lines the user types. */
+    private final Scanner in;
+
+    /**
+     * Creates a Ui that reads commands from the keyboard and prints replies to the console.
+     */
+    public Ui() {
+        in = new Scanner(System.in);
+    }
 
     /**
      * Shows the banner and greeting, wrapped in divider lines.
@@ -183,10 +191,17 @@ public class Ui {
         showMessage("  " + task);
     }
 
+    /**
+     * Shows how many tasks the list holds, after a task is added or removed.
+     */
     private void showTaskCount(int taskCount) {
         showMessage("Now you have " + taskCount + " tasks in the list.");
     }
 
+    /**
+     * Shows each task on its own line, numbered from 1, e.g. "1.[T][ ] read book".
+     * Used by every command that lists tasks, so they all look the same.
+     */
     private void showNumberedTasks(TaskList tasks) {
         for (int i = 0; i < tasks.size(); i++) {
             showMessage((i + 1) + "." + tasks.get(i));

@@ -22,6 +22,9 @@ public class Todo extends Task {
         return "T | " + super.toFileString();
     }
 
+    /**
+     * Returns this todo as shown to the user, e.g. "[T][X] read book".
+     */
     @Override
     public String toString() {
         return "[T]" + super.toString();

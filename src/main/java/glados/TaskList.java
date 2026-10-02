@@ -13,6 +13,7 @@ import java.util.Locale;
  * fixed task limit or separate count to track. Indexes are 0-based.
  */
 public class TaskList {
+    /** The tasks, in the order they were added. */
     private final ArrayList<Task> tasks;
 
     /**

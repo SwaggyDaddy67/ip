@@ -83,6 +83,13 @@ public class Parser {
     };
 
     /**
+     * Prevents creating Parser objects. Every method is static, since parsing keeps
+     * no state between commands, so methods are called as e.g. Parser.parseTodo(input).
+     */
+    private Parser() {
+    }
+
+    /**
      * Returns true if the input is the command that ends the conversation.
      */
     public static boolean isExit(String input) {

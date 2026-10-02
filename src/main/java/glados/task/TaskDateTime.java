@@ -35,6 +35,8 @@ public class TaskDateTime {
 
     /** The date and time. When no time was given, the time is midnight and is never shown. */
     private final LocalDateTime dateTime;
+
+    /** Whether a time of day was given, which decides whether the time is shown and saved. */
     private final boolean hasTime;
 
     /**

@@ -20,6 +20,7 @@ import java.util.List;
  * e.g. "D | 0 | return book | 2019-10-15".
  */
 public class Storage {
+    /** Location of the data file, relative to the folder the program runs in. */
     private final Path filePath;
 
     /** How many lines the last load skipped because they were not in the expected format. */
