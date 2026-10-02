@@ -12,6 +12,10 @@ Each test runs in its own fresh, empty working folder, so data files saved by
 one test never leak into another (or into the repository). A test may also
 give a "Data file before" block (written to data/glados.txt before the run)
 and a "Data file after" block (compared against data/glados.txt after it).
+
+"Data file before" is written as UTF-8. To test a file saved in another
+encoding, label it "Data file before (Windows-1252)" or
+"Data file before (UTF-8 with BOM)" instead.
 """
 
 import re
@@ -30,7 +34,12 @@ TEST_HEADER_RE = re.compile(r"^## (.+)$", re.MULTILINE)
 AIM_RE = re.compile(r"\*\*Aim:\*\*\s*(.+?)\n\n", re.DOTALL)
 CODE_BLOCK_RE = re.compile(r"```text\n(.*?)```", re.DOTALL)
 LABELED_BLOCK_RE = re.compile(r"\*\*([^*]+):\*\*\s*\n```text\n(.*?)```", re.DOTALL)
-KNOWN_LABELS = {"Input", "Expected output", "Data file before", "Data file after"}
+DATA_BEFORE_ENCODINGS = {
+    "Data file before": "utf-8",
+    "Data file before (Windows-1252)": "cp1252",  # e.g. saved by older Windows text editors
+    "Data file before (UTF-8 with BOM)": "utf-8-sig",  # UTF-8 with a byte order mark first
+}
+KNOWN_LABELS = {"Input", "Expected output", "Data file after", *DATA_BEFORE_ENCODINGS}
 NO_FILE = "(data file does not exist)"
 
 
@@ -53,12 +62,14 @@ def parse_plan(plan_text):
         labeled = LABELED_BLOCK_RE.findall(body)
         blocks = dict(labeled)
         unknown = set(blocks) - KNOWN_LABELS
-        if (len(labeled) != len(blocks) or unknown
+        data_before_count = len(set(blocks) & set(DATA_BEFORE_ENCODINGS))
+        if (len(labeled) != len(blocks) or unknown or data_before_count > 1
                 or len(labeled) != len(CODE_BLOCK_RE.findall(body))
                 or "Input" not in blocks or "Expected output" not in blocks):
             print(f"error: test '{name}' needs exactly one **Input:** and one "
                   f"**Expected output:** ```text``` block, plus optional "
-                  f"**Data file before:** / **Data file after:** blocks",
+                  f"**Data file before:** (or one of its encoding variants) / "
+                  f"**Data file after:** blocks",
                   file=sys.stderr)
             sys.exit(2)
 
@@ -78,13 +89,24 @@ def compile_sources():
         sys.exit(1)
 
 
-def run_program(input_text, data_before):
-    """Run GLaDOS in a fresh folder; return (stdout, data file contents afterwards)."""
+def get_data_before(blocks):
+    """Return (contents, encoding) of the test's data-file-before block, or (None, None)."""
+    for label, encoding in DATA_BEFORE_ENCODINGS.items():
+        if label in blocks:
+            return blocks[label], encoding
+    return None, None
+
+
+def run_program(input_text, data_before, encoding="utf-8"):
+    """Run GLaDOS in a fresh folder; return (stdout, data file contents afterwards).
+
+    data_before, if given, is written to the data file in the given encoding.
+    """
     with tempfile.TemporaryDirectory() as work_dir:
         data_path = Path(work_dir) / DATA_FILE
         if data_before is not None:
             data_path.parent.mkdir(parents=True)
-            data_path.write_text(data_before, encoding="utf-8")
+            data_path.write_text(data_before, encoding=encoding)
 
         result = subprocess.run(
             ["java", "-cp", str(BUILD_DIR), MAIN_CLASS],
@@ -125,14 +147,14 @@ def main():
     for name, aim, blocks in tests:
         print(f"\n=== {name} ===")
         print(f"Aim: {aim}")
-        data_before = blocks.get("Data file before")
+        data_before, encoding = get_data_before(blocks)
         if data_before is not None:
-            print("--- data file before ---")
+            print(f"--- data file before ({encoding}) ---")
             print(data_before.rstrip("\n"))
         print("--- console input ---")
         print(blocks["Input"].rstrip("\n"))
 
-        actual_text, data_after = run_program(blocks["Input"], data_before)
+        actual_text, data_after = run_program(blocks["Input"], data_before, encoding)
         print("--- console output ---")
         print(actual_text.rstrip("\n"))
 

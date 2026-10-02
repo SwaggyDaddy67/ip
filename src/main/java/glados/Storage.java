@@ -7,6 +7,7 @@ import glados.task.TaskDateTime;
 import glados.task.Todo;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeParseException;
@@ -20,6 +21,12 @@ import java.util.List;
  * e.g. "D | 0 | return book | 2019-10-15".
  */
 public class Storage {
+    /** Invisible mark some editors put at the start of a UTF-8 file. */
+    private static final String BYTE_ORDER_MARK = "﻿";
+
+    /** Character that stands in for any bytes in the file that are not valid UTF-8. */
+    private static final char UNREADABLE_CHARACTER = '�';
+
     /** Location of the data file, relative to the folder the program runs in. */
     private final Path filePath;
 
@@ -40,7 +47,8 @@ public class Storage {
      *
      * <p>If the file does not exist yet (e.g. the first time the program runs),
      * an empty list is returned. Blank lines are ignored, and lines not in the
-     * expected format are skipped and counted, see {@link #getCorruptedLineCount()}.
+     * expected format, including lines with characters that are not valid UTF-8,
+     * are skipped and counted, see {@link #getCorruptedLineCount()}.
      *
      * @return the loaded tasks, in file order.
      * @throws GLaDOSException if the file exists but could not be read.
@@ -52,12 +60,22 @@ public class Storage {
             return tasks;
         }
 
-        List<String> lines;
+        String content;
         try {
-            lines = Files.readAllLines(filePath);
+            // Decoding the bytes here, instead of using Files.readAllLines, means a byte that is
+            // not valid UTF-8 (e.g. from a file saved in another encoding) only damages its own
+            // line, which is then skipped, rather than making the whole file unreadable.
+            content = new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new GLaDOSException("I couldn't read your saved tasks from " + filePath + ".");
         }
+
+        // Some editors, e.g. Notepad's "UTF-8 with BOM", put an invisible byte order mark
+        // at the start of the file. It is not part of the first task, so it is removed.
+        if (content.startsWith(BYTE_ORDER_MARK)) {
+            content = content.substring(BYTE_ORDER_MARK.length());
+        }
+        List<String> lines = content.lines().toList();
 
         for (String line : lines) {
             if (line.isBlank()) {
@@ -85,6 +103,10 @@ public class Storage {
      * @throws GLaDOSException if the line is not in the expected format.
      */
     private static Task parseTask(String line) throws GLaDOSException {
+        if (line.indexOf(UNREADABLE_CHARACTER) != -1) {
+            throw new GLaDOSException("Unreadable characters in line: " + line);
+        }
+
         // split takes a regular expression, where | has a special meaning, so it is escaped.
         // The -1 keeps empty trailing fields, so "T | 0 | " is caught as having an empty description.
         String[] parts = line.split(" \\| ", -1);

@@ -51,14 +51,21 @@ public class GLaDOS {
 
     /**
      * Greets the user, loads the saved tasks, then handles commands until the user
-     * enters the exit command.
+     * enters the exit command or the input ends.
+     *
+     * <p>Input ends when the user presses Ctrl+Z then Enter on Windows, or Ctrl+D on
+     * macOS and Linux, or when commands are read from a file that has no more lines.
      */
     public void run() {
         ui.showWelcome();
         loadTasks();
 
-        String input = ui.readCommand();
-        while (!Parser.isExit(input)) {
+        while (ui.hasNextCommand()) {
+            String input = ui.readCommand();
+            if (Parser.isExit(input)) {
+                break;
+            }
+
             ui.showLine();
             try {
                 handleCommand(input);
@@ -66,9 +73,9 @@ public class GLaDOS {
                 ui.showError(e.getMessage());
             }
             ui.showLine();
-            input = ui.readCommand();
         }
 
+        // Reached on the exit command, or when input ends, so GLaDOS always says goodbye.
         ui.showGoodbye();
     }
 
