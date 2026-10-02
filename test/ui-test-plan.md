@@ -167,7 +167,7 @@ bye
      State your query. I have other tests to run.
     ____________________________________________________________
     ____________________________________________________________
-     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, delete, bye.
+     I have no idea what that was. Try one of: list, todo, deadline, event, mark, unmark, delete, on, bye.
     ____________________________________________________________
     ____________________________________________________________
      A todo with no description. Try again, with words this time.
@@ -729,4 +729,104 @@ bye
 E | 0 | camp | 2019-10-15 | 2019-10-17
 E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
 E | 0 | party | 2019-10-15 1800 | 2019-10-15
+```
+
+## Test 12: List the tasks that fall on a date
+
+**Aim:** Verify that `on` lists, in list order, the deadlines due on a date
+(with or without a time) and the events running across it, including the
+first and last day of a multi-day event, while todos and tasks on other
+dates are left out. Also verify that both date forms work, that a date with
+nothing on it says so, that a missing date, a non-date, a date with a time,
+and a date that does not exist are each rejected, and that `on` does not
+change the data file.
+
+**Data file before:**
+```text
+T | 0 | read book
+D | 1 | return book | 2019-10-15
+D | 0 | pay rent | 2019-10-16
+E | 0 | camp | 2019-10-14 | 2019-10-17
+E | 0 | dinner | 2019-10-15 1900 | 2019-10-15 2100
+D | 0 | submit report | 2019-10-15 2359
+E | 0 | trip | 2019-10-16 | 2019-10-18
+```
+
+**Input:**
+```text
+on 2019-10-15
+on 15/10/2019
+on 2019-10-14
+on 2019-10-18
+on 2019-10-20
+on
+on Sunday
+on 2019-10-15 1800
+on 2019-02-30
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks on Oct 15 2019:
+     1.[D][X] return book (by: Oct 15 2019)
+     2.[E][ ] camp (from: Oct 14 2019 to: Oct 17 2019)
+     3.[E][ ] dinner (from: Oct 15 2019 7:00 PM to: Oct 15 2019 9:00 PM)
+     4.[D][ ] submit report (by: Oct 15 2019 11:59 PM)
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks on Oct 15 2019:
+     1.[D][X] return book (by: Oct 15 2019)
+     2.[E][ ] camp (from: Oct 14 2019 to: Oct 17 2019)
+     3.[E][ ] dinner (from: Oct 15 2019 7:00 PM to: Oct 15 2019 9:00 PM)
+     4.[D][ ] submit report (by: Oct 15 2019 11:59 PM)
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks on Oct 14 2019:
+     1.[E][ ] camp (from: Oct 14 2019 to: Oct 17 2019)
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks on Oct 18 2019:
+     1.[E][ ] trip (from: Oct 16 2019 to: Oct 18 2019)
+    ____________________________________________________________
+    ____________________________________________________________
+     You have nothing on Oct 20 2019. Enjoy it while it lasts.
+    ____________________________________________________________
+    ____________________________________________________________
+     Which date? Try: on 2019-10-15.
+    ____________________________________________________________
+    ____________________________________________________________
+     "Sunday" is not a date I understand. Try 2019-10-15 or 2/12/2019, without a time.
+    ____________________________________________________________
+    ____________________________________________________________
+     "2019-10-15 1800" is not a date I understand. Try 2019-10-15 or 2/12/2019, without a time.
+    ____________________________________________________________
+    ____________________________________________________________
+     "2019-02-30" is not a date I understand. Try 2019-10-15 or 2/12/2019, without a time.
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 0 | read book
+D | 1 | return book | 2019-10-15
+D | 0 | pay rent | 2019-10-16
+E | 0 | camp | 2019-10-14 | 2019-10-17
+E | 0 | dinner | 2019-10-15 1900 | 2019-10-15 2100
+D | 0 | submit report | 2019-10-15 2359
+E | 0 | trip | 2019-10-16 | 2019-10-18
 ```

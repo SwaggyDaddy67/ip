@@ -1,7 +1,9 @@
 package glados;
 
 import glados.task.Task;
+import glados.task.TaskDateTime;
 
+import java.time.LocalDate;
 import java.util.Scanner;
 
 /**
@@ -106,9 +108,24 @@ public class Ui {
      */
     public void showTaskList(TaskList tasks) {
         showMessage("Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            showMessage((i + 1) + "." + tasks.get(i));
+        showNumberedTasks(tasks);
+    }
+
+    /**
+     * Shows the tasks that fall on a date, numbered from 1, or says there are none.
+     *
+     * @param date the date asked about.
+     * @param tasksOnDate the tasks that fall on that date.
+     */
+    public void showTasksOn(LocalDate date, TaskList tasksOnDate) {
+        // Wrapping the date in a TaskDateTime shows it in the same format as task dates.
+        String shownDate = new TaskDateTime(date).toString();
+        if (tasksOnDate.size() == 0) {
+            showMessage("You have nothing on " + shownDate + ". Enjoy it while it lasts.");
+            return;
         }
+        showMessage("Here are the tasks on " + shownDate + ":");
+        showNumberedTasks(tasksOnDate);
     }
 
     /**
@@ -153,5 +170,11 @@ public class Ui {
 
     private void showTaskCount(int taskCount) {
         showMessage("Now you have " + taskCount + " tasks in the list.");
+    }
+
+    private void showNumberedTasks(TaskList tasks) {
+        for (int i = 0; i < tasks.size(); i++) {
+            showMessage((i + 1) + "." + tasks.get(i));
+        }
     }
 }

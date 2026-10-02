@@ -1,5 +1,7 @@
 package glados.task;
 
+import java.time.LocalDate;
+
 /**
  * Represents an event: a task that starts and ends at specific date/times.
  */
@@ -18,6 +20,15 @@ public class Event extends Task {
         super(description);
         this.from = from;
         this.to = to;
+    }
+
+    /**
+     * Returns true if the given date is any day from this event's start date to
+     * its end date, inclusive, so a multi-day event falls on every day it spans.
+     */
+    @Override
+    public boolean occursOn(LocalDate date) {
+        return !date.isBefore(from.getDate()) && !date.isAfter(to.getDate());
     }
 
     /**

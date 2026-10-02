@@ -43,9 +43,13 @@ public class Parser {
     /** Command word that adds an event task, e.g. "event camp /from 2019-10-15 /to 2019-10-17". */
     public static final String COMMAND_EVENT = "event";
 
+    /** Command word that lists the tasks falling on a date, e.g. "on 2019-10-15". */
+    public static final String COMMAND_ON = "on";
+
     /** Command words that are followed by arguments, in the order they are checked. */
     private static final String[] COMMANDS_WITH_ARGUMENTS = {
-        COMMAND_MARK, COMMAND_UNMARK, COMMAND_DELETE, COMMAND_TODO, COMMAND_DEADLINE, COMMAND_EVENT
+        COMMAND_MARK, COMMAND_UNMARK, COMMAND_DELETE, COMMAND_TODO, COMMAND_DEADLINE, COMMAND_EVENT,
+        COMMAND_ON
     };
 
     /** Separates a deadline's description from its due date. */
@@ -102,7 +106,7 @@ public class Parser {
             }
         }
         throw new GLaDOSException("I have no idea what that was. Try one of: "
-                + "list, todo, deadline, event, mark, unmark, delete, bye.");
+                + "list, todo, deadline, event, mark, unmark, delete, on, bye.");
     }
 
     /**
@@ -177,6 +181,31 @@ public class Parser {
             throw new GLaDOSException("You left the /by empty. When is this due?");
         }
         return new Deadline(description, parseDateTime(by));
+    }
+
+    /**
+     * Parses the date after the "on" command word, e.g. "on 2019-10-15".
+     *
+     * <p>Only a date is accepted, since the command asks about a whole day.
+     *
+     * @param input the full command entered by the user.
+     * @return the date asked about.
+     * @throws GLaDOSException if no date was given, or it is not in an accepted form.
+     */
+    public static LocalDate parseOnDate(String input) throws GLaDOSException {
+        String argument = input.substring(COMMAND_ON.length()).trim();
+        if (argument.isEmpty()) {
+            throw new GLaDOSException("Which date? Try: on 2019-10-15.");
+        }
+        for (DateTimeFormatter format : DATE_INPUT_FORMATS) {
+            try {
+                return LocalDate.parse(argument, format);
+            } catch (DateTimeParseException e) {
+                // Not in this format, so try the next one.
+            }
+        }
+        throw new GLaDOSException("\"" + argument + "\" is not a date I understand. "
+                + "Try 2019-10-15 or 2/12/2019, without a time.");
     }
 
     /**

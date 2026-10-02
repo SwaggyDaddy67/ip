@@ -3,14 +3,15 @@ package glados;
 import glados.task.Task;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
 
 /**
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
  *
  * <p>Supports adding a todo, deadline, or event task, listing all tasks,
- * marking a task as done or not done, and deleting a task. The task list is
- * loaded from disk at startup and saved after every change. The conversation
- * ends when the user enters the exit command.
+ * listing the tasks that fall on a date, marking a task as done or not done,
+ * and deleting a task. The task list is loaded from disk at startup and saved
+ * after every change. The conversation ends when the user enters the exit command.
  */
 public class GLaDOS {
 
@@ -117,6 +118,9 @@ public class GLaDOS {
             addTask(Parser.parseDeadline(input));
         } else if (commandWord.equals(Parser.COMMAND_EVENT)) {
             addTask(Parser.parseEvent(input));
+        } else if (commandWord.equals(Parser.COMMAND_ON)) {
+            LocalDate date = Parser.parseOnDate(input);
+            ui.showTasksOn(date, tasks.getTasksOn(date));
         }
     }
 

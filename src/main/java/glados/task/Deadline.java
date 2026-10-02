@@ -1,5 +1,7 @@
 package glados.task;
 
+import java.time.LocalDate;
+
 /**
  * Represents a deadline: a task that needs to be done before a specific date/time.
  */
@@ -15,6 +17,14 @@ public class Deadline extends Task {
     public Deadline(String description, TaskDateTime by) {
         super(description);
         this.by = by;
+    }
+
+    /**
+     * Returns true if this deadline is due on the given date.
+     */
+    @Override
+    public boolean occursOn(LocalDate date) {
+        return by.getDate().equals(date);
     }
 
     /**
