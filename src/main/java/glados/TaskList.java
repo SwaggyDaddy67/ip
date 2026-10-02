@@ -23,10 +23,13 @@ public class TaskList {
     /**
      * Creates a task list holding the given tasks, e.g. ones loaded from the data file.
      *
+     * <p>The tasks are copied into a new list, so later changes to the given list
+     * do not affect this one.
+     *
      * @param tasks the tasks to start with, in order.
      */
     public TaskList(ArrayList<Task> tasks) {
-        this.tasks = tasks;
+        this.tasks = new ArrayList<>(tasks);
     }
 
     /**
