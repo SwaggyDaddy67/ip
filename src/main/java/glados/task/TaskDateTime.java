@@ -76,6 +76,20 @@ public class TaskDateTime {
     }
 
     /**
+     * Returns true if this is earlier than the other date and time.
+     *
+     * <p>When either one has no time of day, only the dates are compared, so a
+     * date with no time counts as the whole day, e.g. "2019-10-15" is not before
+     * "2019-10-15 1800".
+     */
+    public boolean isBefore(TaskDateTime other) {
+        if (hasTime && other.hasTime) {
+            return dateTime.isBefore(other.dateTime);
+        }
+        return getDate().isBefore(other.getDate());
+    }
+
+    /**
      * Returns this date and time as written in the data file, e.g. "2019-12-02 1800".
      */
     public String toFileString() {

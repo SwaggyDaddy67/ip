@@ -40,7 +40,7 @@ public class Parser {
     /** Command word that adds a deadline task, e.g. "deadline return book /by 2019-10-15". */
     public static final String COMMAND_DEADLINE = "deadline";
 
-    /** Command word that adds an event task, e.g. "event meeting /from Mon 2pm /to 4pm". */
+    /** Command word that adds an event task, e.g. "event camp /from 2019-10-15 /to 2019-10-17". */
     public static final String COMMAND_EVENT = "event";
 
     /** Command words that are followed by arguments, in the order they are checked. */
@@ -51,10 +51,10 @@ public class Parser {
     /** Separates a deadline's description from its due date. */
     private static final String DELIMITER_BY = "/by";
 
-    /** Separates an event's description from its start time. */
+    /** Separates an event's description from its start. */
     private static final String DELIMITER_FROM = "/from";
 
-    /** Separates an event's start time from its end time. */
+    /** Separates an event's start from its end. */
     private static final String DELIMITER_TO = "/to";
 
     /** Separates fields in the data file, so it cannot appear inside a task. */
@@ -211,9 +211,10 @@ public class Parser {
     /**
      * Parses an event command into an Event task.
      *
-     * @param input the full command, e.g. "event meeting /from Mon 2pm /to 4pm".
+     * @param input the full command, e.g. "event camp /from 2019-10-15 /to 2019-10-17".
      * @return the new event.
      * @throws GLaDOSException if /from or /to is missing or out of order, any part is empty,
+     *         either is not a valid date, the event ends before it starts,
      *         or the input contains a reserved character.
      */
     public static Event parseEvent(String input) throws GLaDOSException {
@@ -223,7 +224,7 @@ public class Parser {
         int toIndex = details.indexOf(DELIMITER_TO);
         if (fromIndex == -1 || toIndex == -1) {
             throw new GLaDOSException("An event needs both a /from and a /to. "
-                    + "Try: event meeting /from Mon 2pm /to 4pm.");
+                    + "Try: event camp /from 2019-10-15 /to 2019-10-17.");
         }
         if (toIndex < fromIndex) {
             throw new GLaDOSException("The /to has to come after the /from.");
@@ -236,9 +237,15 @@ public class Parser {
             throw new GLaDOSException("An event with no description. What am I meant to track?");
         }
         if (from.isEmpty() || to.isEmpty()) {
-            throw new GLaDOSException("An event needs both a start and an end time.");
+            throw new GLaDOSException("An event needs both a start and an end date.");
         }
-        return new Event(description, from, to);
+
+        TaskDateTime start = parseDateTime(from);
+        TaskDateTime end = parseDateTime(to);
+        if (end.isBefore(start)) {
+            throw new GLaDOSException("This event ends before it starts. Check your /from and /to.");
+        }
+        return new Event(description, start, end);
     }
 
     /**

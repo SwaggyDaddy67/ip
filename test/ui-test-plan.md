@@ -21,13 +21,14 @@ each one formatted with its type letter and status box, and that `mark`
 and `unmark` both update the status shown afterwards. Also verify that the
 saved data file holds every task, in order, with its latest done status.
 The deadline uses the date and time `2/12/2019 1800`, which is shown as
-`Dec 02 2019 6:00 PM` and saved as `2019-12-02 1800`.
+`Dec 02 2019 6:00 PM` and saved as `2019-12-02 1800`, and the event's start
+and end are understood the same way.
 
 **Input:**
 ```text
 todo read book
 deadline return book /by 2/12/2019 1800
-event project meeting /from Aug 6th 2pm /to 4pm
+event project meeting /from 6/8/2019 1400 /to 6/8/2019 1600
 mark 1
 list
 unmark 1
@@ -59,7 +60,7 @@ bye
     ____________________________________________________________
     ____________________________________________________________
      Got it. I've added this task:
-       [E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+       [E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
      Now you have 3 tasks in the list.
     ____________________________________________________________
     ____________________________________________________________
@@ -70,7 +71,7 @@ bye
      Here are the tasks in your list:
      1.[T][X] read book
      2.[D][ ] return book (by: Dec 02 2019 6:00 PM)
-     3.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     3.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
     ____________________________________________________________
     ____________________________________________________________
      OK, I've marked this task as not done yet:
@@ -80,7 +81,7 @@ bye
      Here are the tasks in your list:
      1.[T][ ] read book
      2.[D][ ] return book (by: Dec 02 2019 6:00 PM)
-     3.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     3.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
     ____________________________________________________________
     ____________________________________________________________
      Test concluded. Try not to disappoint me next time.
@@ -91,7 +92,7 @@ bye
 ```text
 T | 0 | read book
 D | 0 | return book | 2019-12-02 1800
-E | 0 | project meeting | Aug 6th 2pm | 4pm
+E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
 ```
 
 ## Test 2: Reject a todo with no description
@@ -253,7 +254,9 @@ T | 1 | read book
 `/to` are each rejected with a message naming the correct format, rather
 than crashing. Also verify that a deadline whose `/by` is not a date, is a
 date that does not exist, or has a time not in 24-hour form is rejected,
-and that a well-formed deadline entered afterwards is still added correctly.
+that an event whose `/from` or `/to` is not a date, or which ends before it
+starts, is rejected, and that a well-formed deadline entered afterwards is
+still added correctly.
 
 **Input:**
 ```text
@@ -262,6 +265,9 @@ event meeting /from Mon
 deadline return book /by Sunday
 deadline return book /by 2019-02-30
 deadline return book /by 2019-10-15 6pm
+event meeting /from Mon /to Tue
+event camp /from 2019-10-17 /to 2019-10-15
+event meeting /from 2019-10-15 1600 /to 2019-10-15 1400
 deadline return book /by 2019-10-15
 list
 bye
@@ -283,7 +289,7 @@ bye
      A deadline needs a /by. Try: deadline return book /by 2019-10-15.
     ____________________________________________________________
     ____________________________________________________________
-     An event needs both a /from and a /to. Try: event meeting /from Mon 2pm /to 4pm.
+     An event needs both a /from and a /to. Try: event camp /from 2019-10-15 /to 2019-10-17.
     ____________________________________________________________
     ____________________________________________________________
      "Sunday" is not a date I understand. Try 2019-10-15 or 2/12/2019, with an optional time like 1800.
@@ -293,6 +299,15 @@ bye
     ____________________________________________________________
     ____________________________________________________________
      "2019-10-15 6pm" is not a date I understand. Try 2019-10-15 or 2/12/2019, with an optional time like 1800.
+    ____________________________________________________________
+    ____________________________________________________________
+     "Mon" is not a date I understand. Try 2019-10-15 or 2/12/2019, with an optional time like 1800.
+    ____________________________________________________________
+    ____________________________________________________________
+     This event ends before it starts. Check your /from and /to.
+    ____________________________________________________________
+    ____________________________________________________________
+     This event ends before it starts. Check your /from and /to.
     ____________________________________________________________
     ____________________________________________________________
      Got it. I've added this task:
@@ -319,7 +334,7 @@ tasks leaves an empty list, with the saved data file emptied to match.
 ```text
 todo read book
 deadline return book /by 2019-06-06
-event project meeting /from Aug 6th 2pm /to 4pm
+event project meeting /from 6/8/2019 1400 /to 6/8/2019 1600
 delete
 delete abc
 delete 5
@@ -355,7 +370,7 @@ bye
     ____________________________________________________________
     ____________________________________________________________
      Got it. I've added this task:
-       [E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+       [E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
      Now you have 3 tasks in the list.
     ____________________________________________________________
     ____________________________________________________________
@@ -375,7 +390,7 @@ bye
     ____________________________________________________________
      Here are the tasks in your list:
      1.[T][ ] read book
-     2.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     2.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
     ____________________________________________________________
     ____________________________________________________________
      Noted. I've removed this task:
@@ -384,7 +399,7 @@ bye
     ____________________________________________________________
     ____________________________________________________________
      Noted. I've removed this task:
-       [E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+       [E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
      Now you have 0 tasks in the list.
     ____________________________________________________________
     ____________________________________________________________
@@ -409,7 +424,7 @@ with their type, details, and done status intact, and that later changes
 ```text
 T | 1 | read book
 D | 0 | return book | 2019-06-06 1800
-E | 0 | project meeting | Aug 6th 2pm | 4pm
+E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
 ```
 
 **Input:**
@@ -437,7 +452,7 @@ bye
      Here are the tasks in your list:
      1.[T][X] read book
      2.[D][ ] return book (by: Jun 06 2019 6:00 PM)
-     3.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     3.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
     ____________________________________________________________
     ____________________________________________________________
      OK, I've marked this task as not done yet:
@@ -452,7 +467,7 @@ bye
      Here are the tasks in your list:
      1.[T][ ] read book
      2.[D][ ] return book (by: Jun 06 2019 6:00 PM)
-     3.[E][ ] project meeting (from: Aug 6th 2pm to: 4pm)
+     3.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
      4.[T][ ] join sports club
     ____________________________________________________________
     ____________________________________________________________
@@ -464,25 +479,26 @@ bye
 ```text
 T | 0 | read book
 D | 0 | return book | 2019-06-06 1800
-E | 0 | project meeting | Aug 6th 2pm | 4pm
+E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
 T | 0 | join sports club
 ```
 
 ## Test 8: Skip corrupted lines in the data file
 
 **Aim:** Verify that lines in the data file with an unknown type letter, a
-missing field, an invalid done flag, an empty description, or a date that
-is not in the data file's format, and lines that are not tasks at all, are
-skipped and reported, while blank lines are ignored and valid lines still
-load. Also verify that the next save rewrites the file with only the valid
-tasks.
+missing field, an invalid done flag, an empty description, a date that is
+not in the data file's format, or an event that ends before it starts, and
+lines that are not tasks at all, are skipped and reported, while blank
+lines are ignored and valid lines still load. Also verify that the next
+save rewrites the file with only the valid tasks.
 
 **Data file before:**
 ```text
 T | 1 | read book
 X | 0 | unknown type
 D | 0 | missing date
-E | 2 | bad flag | Mon | Tue
+E | 2 | bad flag | 2019-08-06 | 2019-08-07
+E | 0 | ends early | 2019-08-07 | 2019-08-06
 T | 0 | 
 D | 0 | bad date | June 6th
 
@@ -510,7 +526,7 @@ bye
      State your query. I have other tests to run.
     ____________________________________________________________
     ____________________________________________________________
-     Your save file is damaged. I skipped 6 unreadable line(s).
+     Your save file is damaged. I skipped 7 unreadable line(s).
      They will be gone for good the next time I save.
     ____________________________________________________________
     ____________________________________________________________
@@ -651,4 +667,66 @@ D | 0 | return book | 2019-10-15
 D | 0 | submit report | 2019-10-15 0930
 D | 0 | pay rent | 2019-12-02
 D | 0 | call home | 2019-12-02 1800
+```
+
+## Test 11: Understand dates and times in events
+
+**Aim:** Verify that an event's `/from` and `/to` are understood in the same
+forms as a deadline's `/by`, that an event may span several days or start
+and end on the same day, that a start with a time and an end with only a
+date on the same day is accepted (a date with no time counts as the whole
+day), and that each is saved in the data file's date format.
+
+**Input:**
+```text
+event camp /from 2019-10-15 /to 2019-10-17
+event project meeting /from 6/8/2019 1400 /to 6/8/2019 1600
+event party /from 2019-10-15 1800 /to 2019-10-15
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [E][ ] camp (from: Oct 15 2019 to: Oct 17 2019)
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
+     Now you have 2 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [E][ ] party (from: Oct 15 2019 6:00 PM to: Oct 15 2019)
+     Now you have 3 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[E][ ] camp (from: Oct 15 2019 to: Oct 17 2019)
+     2.[E][ ] project meeting (from: Aug 06 2019 2:00 PM to: Aug 06 2019 4:00 PM)
+     3.[E][ ] party (from: Oct 15 2019 6:00 PM to: Oct 15 2019)
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+E | 0 | camp | 2019-10-15 | 2019-10-17
+E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
+E | 0 | party | 2019-10-15 1800 | 2019-10-15
 ```

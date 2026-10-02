@@ -106,7 +106,12 @@ public class Storage {
         } else if (type.equals("D") && parts.length == 4) {
             task = new Deadline(description, parseDateTime(parts[3], line));
         } else if (type.equals("E") && parts.length == 5) {
-            task = new Event(description, parts[3], parts[4]);
+            TaskDateTime from = parseDateTime(parts[3], line);
+            TaskDateTime to = parseDateTime(parts[4], line);
+            if (to.isBefore(from)) {
+                throw new GLaDOSException("Event ends before it starts in line: " + line);
+            }
+            task = new Event(description, from, to);
         } else {
             throw new GLaDOSException("Unknown type or wrong number of fields in line: " + line);
         }
