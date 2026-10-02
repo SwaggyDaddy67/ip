@@ -59,7 +59,17 @@ public class Ui {
     }
 
     /**
+     * Returns true if there is another line of input to read.
+     * Waits until the user types a line, and returns false only once the input has
+     * ended, e.g. after Ctrl+D.
+     */
+    public boolean hasNextCommand() {
+        return in.hasNextLine();
+    }
+
+    /**
      * Returns the next line the user enters.
+     * Call {@link #hasNextCommand()} first, since this fails if the input has ended.
      */
     public String readCommand() {
         return in.nextLine();

@@ -916,3 +916,47 @@ E | 0 | project meeting | 2019-08-06 1400 | 2019-08-06 1600
 T | 1 | join sports club
 T | 0 | borrow book
 ```
+
+## Test 14: Say goodbye when input ends without bye
+
+**Aim:** Verify that when the input ends before `bye` is entered (e.g. the
+user presses Ctrl+D, or commands are read from a file), GLaDOS shows the
+goodbye message and exits normally instead of crashing, and that tasks
+added before then are still saved.
+
+**Input:**
+```text
+todo read book
+list
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] read book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] read book
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 0 | read book
+```
