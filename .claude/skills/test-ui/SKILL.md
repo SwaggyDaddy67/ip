@@ -52,6 +52,11 @@ fenced ` ```text ` block. Optional `**Data file before:**` and
 `**Data file after:**` blocks set up and check `data/glados.txt`. See the
 existing test cases in that file for the exact format the parser expects.
 
+`**Data file before:**` is written as UTF-8. To test a data file saved in
+another encoding, use `**Data file before (Windows-1252):**` (as saved by
+older Windows text editors) or `**Data file before (UTF-8 with BOM):**`
+instead. A test may have only one of these three blocks.
+
 **Whenever a code change alters a command's input format or reply wording**,
 update the affected test case(s) in test/ui-test-plan.md to match, then
 re-run this skill — do not leave the plan out of sync with actual behaviour.
