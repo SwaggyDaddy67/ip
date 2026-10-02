@@ -4,7 +4,7 @@ package glados.task;
  * Represents a deadline: a task that needs to be done before a specific date/time.
  */
 public class Deadline extends Task {
-    protected String by;
+    protected TaskDateTime by;
 
     /**
      * Creates a deadline with the given description and due date.
@@ -12,17 +12,17 @@ public class Deadline extends Task {
      * @param description what the task is.
      * @param by when the task is due.
      */
-    public Deadline(String description, String by) {
+    public Deadline(String description, TaskDateTime by) {
         super(description);
         this.by = by;
     }
 
     /**
-     * Returns this deadline as a data file line, e.g. "D | 0 | return book | Sunday".
+     * Returns this deadline as a data file line, e.g. "D | 0 | return book | 2019-12-02 1800".
      */
     @Override
     public String toFileString() {
-        return "D | " + super.toFileString() + " | " + by;
+        return "D | " + super.toFileString() + " | " + by.toFileString();
     }
 
     @Override

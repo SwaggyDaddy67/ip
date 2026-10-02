@@ -2,7 +2,14 @@ package glados;
 
 import glados.task.Deadline;
 import glados.task.Event;
+import glados.task.TaskDateTime;
 import glados.task.Todo;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 /**
  * Makes sense of the commands the user enters.
@@ -30,7 +37,7 @@ public class Parser {
     /** Command word that adds a todo task, e.g. "todo read book". */
     public static final String COMMAND_TODO = "todo";
 
-    /** Command word that adds a deadline task, e.g. "deadline return book /by Sunday". */
+    /** Command word that adds a deadline task, e.g. "deadline return book /by 2019-10-15". */
     public static final String COMMAND_DEADLINE = "deadline";
 
     /** Command word that adds an event task, e.g. "event meeting /from Mon 2pm /to 4pm". */
@@ -52,6 +59,21 @@ public class Parser {
 
     /** Separates fields in the data file, so it cannot appear inside a task. */
     private static final String RESERVED_CHARACTER = "|";
+
+    /**
+     * Date formats the user may type, e.g. "2019-10-15" or "2/12/2019" (day first).
+     * STRICT rejects dates that do not exist, such as 2019-02-30, and needs "uuuu" for the year.
+     */
+    private static final DateTimeFormatter[] DATE_INPUT_FORMATS = {
+        DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT)
+    };
+
+    /** Date and 24-hour time formats the user may type, e.g. "2019-10-15 0930" or "2/12/2019 1800". */
+    private static final DateTimeFormatter[] DATE_TIME_INPUT_FORMATS = {
+        DateTimeFormatter.ofPattern("uuuu-MM-dd HHmm").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("d/M/uuuu HHmm").withResolverStyle(ResolverStyle.STRICT)
+    };
 
     /**
      * Returns true if the input is the command that ends the conversation.
@@ -132,10 +154,10 @@ public class Parser {
     /**
      * Parses a deadline command into a Deadline task.
      *
-     * @param input the full command, e.g. "deadline return book /by Sunday".
+     * @param input the full command, e.g. "deadline return book /by 2/12/2019 1800".
      * @return the new deadline.
      * @throws GLaDOSException if the /by is missing, either part around it is empty,
-     *         or the input contains a reserved character.
+     *         the due date is not a valid date, or the input contains a reserved character.
      */
     public static Deadline parseDeadline(String input) throws GLaDOSException {
         checkNoReservedCharacter(input);
@@ -143,7 +165,7 @@ public class Parser {
         int byIndex = details.indexOf(DELIMITER_BY);
         if (byIndex == -1) {
             throw new GLaDOSException("A deadline needs a /by. "
-                    + "Try: deadline return book /by Sunday.");
+                    + "Try: deadline return book /by 2019-10-15.");
         }
 
         String description = details.substring(0, byIndex).trim();
@@ -154,7 +176,36 @@ public class Parser {
         if (by.isEmpty()) {
             throw new GLaDOSException("You left the /by empty. When is this due?");
         }
-        return new Deadline(description, by);
+        return new Deadline(description, parseDateTime(by));
+    }
+
+    /**
+     * Parses a date the user typed, with an optional 24-hour time after it.
+     *
+     * <p>Accepted forms are "2019-10-15" and "2/12/2019" (day first), each optionally
+     * followed by a time such as "1800".
+     *
+     * @param text the date as typed, e.g. "2/12/2019 1800".
+     * @return the date, with the time if one was given.
+     * @throws GLaDOSException if the text is not in an accepted form, or is not a real date or time.
+     */
+    public static TaskDateTime parseDateTime(String text) throws GLaDOSException {
+        for (DateTimeFormatter format : DATE_TIME_INPUT_FORMATS) {
+            try {
+                return new TaskDateTime(LocalDateTime.parse(text, format));
+            } catch (DateTimeParseException e) {
+                // Not in this format, so try the next one.
+            }
+        }
+        for (DateTimeFormatter format : DATE_INPUT_FORMATS) {
+            try {
+                return new TaskDateTime(LocalDate.parse(text, format));
+            } catch (DateTimeParseException e) {
+                // Not in this format, so try the next one.
+            }
+        }
+        throw new GLaDOSException("\"" + text + "\" is not a date I understand. "
+                + "Try 2019-10-15 or 2/12/2019, with an optional time like 1800.");
     }
 
     /**
