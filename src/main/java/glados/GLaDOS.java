@@ -20,64 +20,47 @@ public class GLaDOS {
      */
     private static final Path DATA_FILE = Path.of("data", "glados.txt");
 
+    private final Ui ui;
+    private final Storage storage;
+
+    /** The user's tasks, replaced by the saved ones when the conversation starts. */
+    private TaskList tasks = new TaskList();
+
     /**
-     * Runs the chatbot until the user enters the exit command.
+     * Creates a chatbot that saves its task list to the given file.
+     *
+     * @param filePath location of the data file, relative to the folder the program runs in.
+     */
+    public GLaDOS(Path filePath) {
+        ui = new Ui();
+        storage = new Storage(filePath);
+    }
+
+    /**
+     * Runs the chatbot with the default data file.
      *
      * @param args command line arguments, not used.
      */
     public static void main(String[] args) {
-        Ui ui = new Ui();
-        ui.showWelcome();
+        new GLaDOS(DATA_FILE).run();
+    }
 
-        Storage storage = new Storage(DATA_FILE);
-        TaskList tasks;
-        try {
-            tasks = new TaskList(storage.load());
-        } catch (GLaDOSException e) {
-            ui.showLoadingError(e.getMessage());
-            tasks = new TaskList();
-        }
-        if (storage.getCorruptedLineCount() > 0) {
-            ui.showCorruptedLineWarning(storage.getCorruptedLineCount());
-        }
+    /**
+     * Greets the user, loads the saved tasks, then handles commands until the user
+     * enters the exit command.
+     */
+    public void run() {
+        ui.showWelcome();
+        loadTasks();
 
         String input = ui.readCommand();
-
         while (!Parser.isExit(input)) {
             ui.showLine();
-
             try {
-                String commandWord = Parser.parseCommandWord(input);
-                if (commandWord.equals(Parser.COMMAND_LIST)) {
-                    ui.showTaskList(tasks);
-                } else if (commandWord.equals(Parser.COMMAND_MARK)) {
-                    Task task = tasks.get(Parser.parseTaskIndex(input, commandWord, tasks.size()));
-                    task.markAsDone();
-                    ui.showTaskMarked(task);
-                    storage.save(tasks);
-                } else if (commandWord.equals(Parser.COMMAND_UNMARK)) {
-                    Task task = tasks.get(Parser.parseTaskIndex(input, commandWord, tasks.size()));
-                    task.markAsNotDone();
-                    ui.showTaskUnmarked(task);
-                    storage.save(tasks);
-                } else if (commandWord.equals(Parser.COMMAND_DELETE)) {
-                    Task task = tasks.delete(Parser.parseTaskIndex(input, commandWord, tasks.size()));
-                    ui.showTaskDeleted(task, tasks.size());
-                    storage.save(tasks);
-                } else if (commandWord.equals(Parser.COMMAND_TODO)) {
-                    addTask(tasks, Parser.parseTodo(input), ui);
-                    storage.save(tasks);
-                } else if (commandWord.equals(Parser.COMMAND_DEADLINE)) {
-                    addTask(tasks, Parser.parseDeadline(input), ui);
-                    storage.save(tasks);
-                } else if (commandWord.equals(Parser.COMMAND_EVENT)) {
-                    addTask(tasks, Parser.parseEvent(input), ui);
-                    storage.save(tasks);
-                }
+                handleCommand(input);
             } catch (GLaDOSException e) {
                 ui.showError(e.getMessage());
             }
-
             ui.showLine();
             input = ui.readCommand();
         }
@@ -86,10 +69,65 @@ public class GLaDOS {
     }
 
     /**
-     * Appends the given task to the list and shows the confirmation.
+     * Replaces the task list with the saved tasks, warning the user if they could
+     * not be read or some lines were skipped.
+     *
+     * <p>Done after the welcome rather than in the constructor, so any warning is
+     * shown below the welcome message.
      */
-    private static void addTask(TaskList tasks, Task task, Ui ui) {
+    private void loadTasks() {
+        try {
+            tasks = new TaskList(storage.load());
+        } catch (GLaDOSException e) {
+            ui.showLoadingError(e.getMessage());
+        }
+        if (storage.getCorruptedLineCount() > 0) {
+            ui.showCorruptedLineWarning(storage.getCorruptedLineCount());
+        }
+    }
+
+    /**
+     * Carries out one command entered by the user, saving the task list if it changed.
+     *
+     * @param input the full command entered by the user.
+     * @throws GLaDOSException if the command is unknown, not in the expected format,
+     *         or the task list could not be saved.
+     */
+    private void handleCommand(String input) throws GLaDOSException {
+        String commandWord = Parser.parseCommandWord(input);
+        if (commandWord.equals(Parser.COMMAND_LIST)) {
+            ui.showTaskList(tasks);
+        } else if (commandWord.equals(Parser.COMMAND_MARK)) {
+            Task task = tasks.get(Parser.parseTaskIndex(input, commandWord, tasks.size()));
+            task.markAsDone();
+            ui.showTaskMarked(task);
+            storage.save(tasks);
+        } else if (commandWord.equals(Parser.COMMAND_UNMARK)) {
+            Task task = tasks.get(Parser.parseTaskIndex(input, commandWord, tasks.size()));
+            task.markAsNotDone();
+            ui.showTaskUnmarked(task);
+            storage.save(tasks);
+        } else if (commandWord.equals(Parser.COMMAND_DELETE)) {
+            Task task = tasks.delete(Parser.parseTaskIndex(input, commandWord, tasks.size()));
+            ui.showTaskDeleted(task, tasks.size());
+            storage.save(tasks);
+        } else if (commandWord.equals(Parser.COMMAND_TODO)) {
+            addTask(Parser.parseTodo(input));
+        } else if (commandWord.equals(Parser.COMMAND_DEADLINE)) {
+            addTask(Parser.parseDeadline(input));
+        } else if (commandWord.equals(Parser.COMMAND_EVENT)) {
+            addTask(Parser.parseEvent(input));
+        }
+    }
+
+    /**
+     * Appends the given task to the list, shows the confirmation, and saves the list.
+     *
+     * @throws GLaDOSException if the task list could not be saved.
+     */
+    private void addTask(Task task) throws GLaDOSException {
         tasks.add(task);
         ui.showTaskAdded(task, tasks.size());
+        storage.save(tasks);
     }
 }
