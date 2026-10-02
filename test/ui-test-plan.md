@@ -960,3 +960,102 @@ list
 ```text
 T | 0 | read book
 ```
+
+## Test 15: Keep readable tasks when a line has characters that are not UTF-8
+
+**Aim:** Verify that a data file saved in another encoding (here
+Windows-1252, as by older Windows text editors), where one line contains a
+character that is not valid UTF-8, has only that line skipped and reported,
+while every other task still loads and is kept the next time GLaDOS saves.
+
+**Data file before (Windows-1252):**
+```text
+T | 0 | important saved task
+T | 0 | café
+D | 0 | return book | 2019-06-06
+```
+
+**Input:**
+```text
+list
+todo new task
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Your save file is damaged. I skipped 1 unreadable line(s).
+     They will be gone for good the next time I save.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] important saved task
+     2.[D][ ] return book (by: Jun 06 2019)
+    ____________________________________________________________
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] new task
+     Now you have 3 tasks in the list.
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
+
+**Data file after:**
+```text
+T | 0 | important saved task
+D | 0 | return book | 2019-06-06
+T | 0 | new task
+```
+
+## Test 16: Load a data file saved as UTF-8 with a byte order mark
+
+**Aim:** Verify that a data file starting with a byte order mark (as saved
+by e.g. Notepad's "UTF-8 with BOM" option) loads every task, including the
+first one, with no lines reported as damaged.
+
+**Data file before (UTF-8 with BOM):**
+```text
+T | 0 | first task
+T | 1 | second task
+```
+
+**Input:**
+```text
+list
+bye
+```
+
+**Expected output:**
+```text
+    ____________________________________________________________
+        ________          ____  ____  _____
+       / ____/ /   ____ _/ __ \/ __ \/ ___/
+      / / __/ /   / __ `/ / / / / / /\__ \ 
+     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / 
+     \____/_____/\__,_/_____/\____//____/  
+
+     Hello, I'm GLaDOS nice to... Oh, it's you.
+     State your query. I have other tests to run.
+    ____________________________________________________________
+    ____________________________________________________________
+     Here are the tasks in your list:
+     1.[T][ ] first task
+     2.[T][X] second task
+    ____________________________________________________________
+    ____________________________________________________________
+     Test concluded. Try not to disappoint me next time.
+    ____________________________________________________________
+```
