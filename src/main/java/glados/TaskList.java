@@ -2,6 +2,7 @@ package glados;
 
 import glados.task.Task;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 /**
@@ -62,5 +63,19 @@ public class TaskList {
      */
     public int size() {
         return tasks.size();
+    }
+
+    /**
+     * Returns the tasks that fall on the given date, in list order,
+     * e.g. deadlines due that day and events running across it.
+     */
+    public TaskList getTasksOn(LocalDate date) {
+        TaskList tasksOnDate = new TaskList();
+        for (Task task : tasks) {
+            if (task.occursOn(date)) {
+                tasksOnDate.add(task);
+            }
+        }
+        return tasksOnDate;
     }
 }

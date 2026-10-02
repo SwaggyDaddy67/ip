@@ -2,7 +2,14 @@ package glados;
 
 import glados.task.Deadline;
 import glados.task.Event;
+import glados.task.TaskDateTime;
 import glados.task.Todo;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 /**
  * Makes sense of the commands the user enters.
@@ -30,28 +37,47 @@ public class Parser {
     /** Command word that adds a todo task, e.g. "todo read book". */
     public static final String COMMAND_TODO = "todo";
 
-    /** Command word that adds a deadline task, e.g. "deadline return book /by Sunday". */
+    /** Command word that adds a deadline task, e.g. "deadline return book /by 2019-10-15". */
     public static final String COMMAND_DEADLINE = "deadline";
 
-    /** Command word that adds an event task, e.g. "event meeting /from Mon 2pm /to 4pm". */
+    /** Command word that adds an event task, e.g. "event camp /from 2019-10-15 /to 2019-10-17". */
     public static final String COMMAND_EVENT = "event";
+
+    /** Command word that lists the tasks falling on a date, e.g. "on 2019-10-15". */
+    public static final String COMMAND_ON = "on";
 
     /** Command words that are followed by arguments, in the order they are checked. */
     private static final String[] COMMANDS_WITH_ARGUMENTS = {
-        COMMAND_MARK, COMMAND_UNMARK, COMMAND_DELETE, COMMAND_TODO, COMMAND_DEADLINE, COMMAND_EVENT
+        COMMAND_MARK, COMMAND_UNMARK, COMMAND_DELETE, COMMAND_TODO, COMMAND_DEADLINE, COMMAND_EVENT,
+        COMMAND_ON
     };
 
     /** Separates a deadline's description from its due date. */
     private static final String DELIMITER_BY = "/by";
 
-    /** Separates an event's description from its start time. */
+    /** Separates an event's description from its start. */
     private static final String DELIMITER_FROM = "/from";
 
-    /** Separates an event's start time from its end time. */
+    /** Separates an event's start from its end. */
     private static final String DELIMITER_TO = "/to";
 
     /** Separates fields in the data file, so it cannot appear inside a task. */
     private static final String RESERVED_CHARACTER = "|";
+
+    /**
+     * Date formats the user may type, e.g. "2019-10-15" or "2/12/2019" (day first).
+     * STRICT rejects dates that do not exist, such as 2019-02-30, and needs "uuuu" for the year.
+     */
+    private static final DateTimeFormatter[] DATE_INPUT_FORMATS = {
+        DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT)
+    };
+
+    /** Date and 24-hour time formats the user may type, e.g. "2019-10-15 0930" or "2/12/2019 1800". */
+    private static final DateTimeFormatter[] DATE_TIME_INPUT_FORMATS = {
+        DateTimeFormatter.ofPattern("uuuu-MM-dd HHmm").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("d/M/uuuu HHmm").withResolverStyle(ResolverStyle.STRICT)
+    };
 
     /**
      * Returns true if the input is the command that ends the conversation.
@@ -80,7 +106,7 @@ public class Parser {
             }
         }
         throw new GLaDOSException("I have no idea what that was. Try one of: "
-                + "list, todo, deadline, event, mark, unmark, delete, bye.");
+                + "list, todo, deadline, event, mark, unmark, delete, on, bye.");
     }
 
     /**
@@ -132,10 +158,10 @@ public class Parser {
     /**
      * Parses a deadline command into a Deadline task.
      *
-     * @param input the full command, e.g. "deadline return book /by Sunday".
+     * @param input the full command, e.g. "deadline return book /by 2/12/2019 1800".
      * @return the new deadline.
      * @throws GLaDOSException if the /by is missing, either part around it is empty,
-     *         or the input contains a reserved character.
+     *         the due date is not a valid date, or the input contains a reserved character.
      */
     public static Deadline parseDeadline(String input) throws GLaDOSException {
         checkNoReservedCharacter(input);
@@ -143,7 +169,7 @@ public class Parser {
         int byIndex = details.indexOf(DELIMITER_BY);
         if (byIndex == -1) {
             throw new GLaDOSException("A deadline needs a /by. "
-                    + "Try: deadline return book /by Sunday.");
+                    + "Try: deadline return book /by 2019-10-15.");
         }
 
         String description = details.substring(0, byIndex).trim();
@@ -154,15 +180,70 @@ public class Parser {
         if (by.isEmpty()) {
             throw new GLaDOSException("You left the /by empty. When is this due?");
         }
-        return new Deadline(description, by);
+        return new Deadline(description, parseDateTime(by));
+    }
+
+    /**
+     * Parses the date after the "on" command word, e.g. "on 2019-10-15".
+     *
+     * <p>Only a date is accepted, since the command asks about a whole day.
+     *
+     * @param input the full command entered by the user.
+     * @return the date asked about.
+     * @throws GLaDOSException if no date was given, or it is not in an accepted form.
+     */
+    public static LocalDate parseOnDate(String input) throws GLaDOSException {
+        String argument = input.substring(COMMAND_ON.length()).trim();
+        if (argument.isEmpty()) {
+            throw new GLaDOSException("Which date? Try: on 2019-10-15.");
+        }
+        for (DateTimeFormatter format : DATE_INPUT_FORMATS) {
+            try {
+                return LocalDate.parse(argument, format);
+            } catch (DateTimeParseException e) {
+                // Not in this format, so try the next one.
+            }
+        }
+        throw new GLaDOSException("\"" + argument + "\" is not a date I understand. "
+                + "Try 2019-10-15 or 2/12/2019, without a time.");
+    }
+
+    /**
+     * Parses a date the user typed, with an optional 24-hour time after it.
+     *
+     * <p>Accepted forms are "2019-10-15" and "2/12/2019" (day first), each optionally
+     * followed by a time such as "1800".
+     *
+     * @param text the date as typed, e.g. "2/12/2019 1800".
+     * @return the date, with the time if one was given.
+     * @throws GLaDOSException if the text is not in an accepted form, or is not a real date or time.
+     */
+    public static TaskDateTime parseDateTime(String text) throws GLaDOSException {
+        for (DateTimeFormatter format : DATE_TIME_INPUT_FORMATS) {
+            try {
+                return new TaskDateTime(LocalDateTime.parse(text, format));
+            } catch (DateTimeParseException e) {
+                // Not in this format, so try the next one.
+            }
+        }
+        for (DateTimeFormatter format : DATE_INPUT_FORMATS) {
+            try {
+                return new TaskDateTime(LocalDate.parse(text, format));
+            } catch (DateTimeParseException e) {
+                // Not in this format, so try the next one.
+            }
+        }
+        throw new GLaDOSException("\"" + text + "\" is not a date I understand. "
+                + "Try 2019-10-15 or 2/12/2019, with an optional time like 1800.");
     }
 
     /**
      * Parses an event command into an Event task.
      *
-     * @param input the full command, e.g. "event meeting /from Mon 2pm /to 4pm".
+     * @param input the full command, e.g. "event camp /from 2019-10-15 /to 2019-10-17".
      * @return the new event.
      * @throws GLaDOSException if /from or /to is missing or out of order, any part is empty,
+     *         either is not a valid date, the event ends before it starts,
      *         or the input contains a reserved character.
      */
     public static Event parseEvent(String input) throws GLaDOSException {
@@ -172,7 +253,7 @@ public class Parser {
         int toIndex = details.indexOf(DELIMITER_TO);
         if (fromIndex == -1 || toIndex == -1) {
             throw new GLaDOSException("An event needs both a /from and a /to. "
-                    + "Try: event meeting /from Mon 2pm /to 4pm.");
+                    + "Try: event camp /from 2019-10-15 /to 2019-10-17.");
         }
         if (toIndex < fromIndex) {
             throw new GLaDOSException("The /to has to come after the /from.");
@@ -185,9 +266,15 @@ public class Parser {
             throw new GLaDOSException("An event with no description. What am I meant to track?");
         }
         if (from.isEmpty() || to.isEmpty()) {
-            throw new GLaDOSException("An event needs both a start and an end time.");
+            throw new GLaDOSException("An event needs both a start and an end date.");
         }
-        return new Event(description, from, to);
+
+        TaskDateTime start = parseDateTime(from);
+        TaskDateTime end = parseDateTime(to);
+        if (end.isBefore(start)) {
+            throw new GLaDOSException("This event ends before it starts. Check your /from and /to.");
+        }
+        return new Event(description, start, end);
     }
 
     /**

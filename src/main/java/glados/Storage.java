@@ -3,11 +3,13 @@ package glados;
 import glados.task.Deadline;
 import glados.task.Event;
 import glados.task.Task;
+import glados.task.TaskDateTime;
 import glados.task.Todo;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +17,7 @@ import java.util.List;
  * Saves the task list to a text file on disk, one task per line, and loads it back.
  *
  * <p>Each line uses the format produced by {@link Task#toFileString()},
- * e.g. "D | 0 | return book | Sunday".
+ * e.g. "D | 0 | return book | 2019-10-15".
  */
 public class Storage {
     private final Path filePath;
@@ -77,7 +79,7 @@ public class Storage {
     }
 
     /**
-     * Turns one data file line, e.g. "D | 1 | return book | Sunday", back into a task.
+     * Turns one data file line, e.g. "D | 1 | return book | 2019-10-15", back into a task.
      *
      * @throws GLaDOSException if the line is not in the expected format.
      */
@@ -102,9 +104,14 @@ public class Storage {
         if (type.equals("T") && parts.length == 3) {
             task = new Todo(description);
         } else if (type.equals("D") && parts.length == 4) {
-            task = new Deadline(description, parts[3]);
+            task = new Deadline(description, parseDateTime(parts[3], line));
         } else if (type.equals("E") && parts.length == 5) {
-            task = new Event(description, parts[3], parts[4]);
+            TaskDateTime from = parseDateTime(parts[3], line);
+            TaskDateTime to = parseDateTime(parts[4], line);
+            if (to.isBefore(from)) {
+                throw new GLaDOSException("Event ends before it starts in line: " + line);
+            }
+            task = new Event(description, from, to);
         } else {
             throw new GLaDOSException("Unknown type or wrong number of fields in line: " + line);
         }
@@ -115,6 +122,21 @@ public class Storage {
             throw new GLaDOSException("Done flag is not 0 or 1 in line: " + line);
         }
         return task;
+    }
+
+    /**
+     * Turns a date field of a data file line, e.g. "2019-12-02 1800", back into a date.
+     *
+     * @param text the date field.
+     * @param line the whole line, used in the error message.
+     * @throws GLaDOSException if the field is not a valid date in the data file's format.
+     */
+    private static TaskDateTime parseDateTime(String text, String line) throws GLaDOSException {
+        try {
+            return TaskDateTime.fromFileString(text);
+        } catch (DateTimeParseException e) {
+            throw new GLaDOSException("Invalid date in line: " + line);
+        }
     }
 
     /**

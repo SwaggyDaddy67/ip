@@ -1,5 +1,7 @@
 package glados.task;
 
+import java.time.LocalDate;
+
 /**
  * Represents a single task in the task list.
  *
@@ -42,6 +44,15 @@ public class Task {
     /** Marks this task as not done. */
     public void markAsNotDone() {
         isDone = false;
+    }
+
+    /**
+     * Returns true if this task falls on the given date.
+     *
+     * <p>A plain task has no date, so it never does. Subclasses with dates override this.
+     */
+    public boolean occursOn(LocalDate date) {
+        return false;
     }
 
     /**

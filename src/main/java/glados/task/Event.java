@@ -1,31 +1,43 @@
 package glados.task;
 
+import java.time.LocalDate;
+
 /**
  * Represents an event: a task that starts and ends at specific date/times.
  */
 public class Event extends Task {
-    protected String from;
-    protected String to;
+    protected TaskDateTime from;
+    protected TaskDateTime to;
 
     /**
-     * Creates an event with the given description, start time, and end time.
+     * Creates an event with the given description, start, and end.
      *
      * @param description what the task is.
      * @param from when the event starts.
-     * @param to when the event ends.
+     * @param to when the event ends, not before it starts.
      */
-    public Event(String description, String from, String to) {
+    public Event(String description, TaskDateTime from, TaskDateTime to) {
         super(description);
         this.from = from;
         this.to = to;
     }
 
     /**
-     * Returns this event as a data file line, e.g. "E | 0 | meeting | Mon 2pm | 4pm".
+     * Returns true if the given date is any day from this event's start date to
+     * its end date, inclusive, so a multi-day event falls on every day it spans.
+     */
+    @Override
+    public boolean occursOn(LocalDate date) {
+        return !date.isBefore(from.getDate()) && !date.isAfter(to.getDate());
+    }
+
+    /**
+     * Returns this event as a data file line,
+     * e.g. "E | 0 | meeting | 2019-08-06 1400 | 2019-08-06 1600".
      */
     @Override
     public String toFileString() {
-        return "E | " + super.toFileString() + " | " + from + " | " + to;
+        return "E | " + super.toFileString() + " | " + from.toFileString() + " | " + to.toFileString();
     }
 
     @Override
