@@ -125,10 +125,10 @@ public class Storage {
      * @param tasks the task list.
      * @throws GLaDOSException if the file could not be written.
      */
-    public void save(ArrayList<Task> tasks) throws GLaDOSException {
+    public void save(TaskList tasks) throws GLaDOSException {
         ArrayList<String> lines = new ArrayList<>();
-        for (Task task : tasks) {
-            lines.add(task.toFileString());
+        for (int i = 0; i < tasks.size(); i++) {
+            lines.add(tasks.get(i).toFileString());
         }
 
         try {
