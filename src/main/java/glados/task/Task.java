@@ -9,7 +9,10 @@ import java.time.LocalDate;
  * Todo, Deadline, and Event are specific kinds of task and extend this class.
  */
 public class Task {
+    /** What the task is, e.g. "read book". */
     protected String description;
+
+    /** Whether the task has been completed. */
     protected boolean isDone;
 
     /**
@@ -32,6 +35,9 @@ public class Task {
         return " ";
     }
 
+    /**
+     * Returns what this task is, e.g. "read book", without its type or status.
+     */
     public String getDescription() {
         return description;
     }

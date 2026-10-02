@@ -21,7 +21,10 @@ public class GLaDOS {
      */
     private static final Path DATA_FILE = Path.of("data", "glados.txt");
 
+    /** Reads the user's commands and shows GLaDOS's replies. */
     private final Ui ui;
+
+    /** Loads the task list at startup and saves it after every change. */
     private final Storage storage;
 
     /** The user's tasks, replaced by the saved ones when the conversation starts. */

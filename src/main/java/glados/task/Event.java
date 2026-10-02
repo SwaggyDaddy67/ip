@@ -6,7 +6,10 @@ import java.time.LocalDate;
  * Represents an event: a task that starts and ends at specific date/times.
  */
 public class Event extends Task {
+    /** When the event starts, with or without a time of day. */
     protected TaskDateTime from;
+
+    /** When the event ends, never before it starts. */
     protected TaskDateTime to;
 
     /**
@@ -40,6 +43,10 @@ public class Event extends Task {
         return "E | " + super.toFileString() + " | " + from.toFileString() + " | " + to.toFileString();
     }
 
+    /**
+     * Returns this event as shown to the user,
+     * e.g. "[E][ ] camp (from: Oct 15 2019 to: Oct 17 2019)".
+     */
     @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";

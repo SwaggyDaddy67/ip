@@ -6,6 +6,7 @@ import java.time.LocalDate;
  * Represents a deadline: a task that needs to be done before a specific date/time.
  */
 public class Deadline extends Task {
+    /** When the task is due, with or without a time of day. */
     protected TaskDateTime by;
 
     /**
@@ -35,6 +36,10 @@ public class Deadline extends Task {
         return "D | " + super.toFileString() + " | " + by.toFileString();
     }
 
+    /**
+     * Returns this deadline as shown to the user,
+     * e.g. "[D][ ] return book (by: Dec 02 2019 6:00 PM)".
+     */
     @Override
     public String toString() {
         return "[D]" + super.toString() + " (by: " + by + ")";
