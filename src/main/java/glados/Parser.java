@@ -43,13 +43,16 @@ public class Parser {
     /** Command word that adds an event task, e.g. "event camp /from 2019-10-15 /to 2019-10-17". */
     public static final String COMMAND_EVENT = "event";
 
+    /** Command word that lists the tasks whose description contains a keyword, e.g. "find book". */
+    public static final String COMMAND_FIND = "find";
+
     /** Command word that lists the tasks falling on a date, e.g. "on 2019-10-15". */
     public static final String COMMAND_ON = "on";
 
     /** Command words that are followed by arguments, in the order they are checked. */
     private static final String[] COMMANDS_WITH_ARGUMENTS = {
         COMMAND_MARK, COMMAND_UNMARK, COMMAND_DELETE, COMMAND_TODO, COMMAND_DEADLINE, COMMAND_EVENT,
-        COMMAND_ON
+        COMMAND_FIND, COMMAND_ON
     };
 
     /** Separates a deadline's description from its due date. */
@@ -106,7 +109,7 @@ public class Parser {
             }
         }
         throw new GLaDOSException("I have no idea what that was. Try one of: "
-                + "list, todo, deadline, event, mark, unmark, delete, on, bye.");
+                + "list, todo, deadline, event, mark, unmark, delete, find, on, bye.");
     }
 
     /**
@@ -181,6 +184,24 @@ public class Parser {
             throw new GLaDOSException("You left the /by empty. When is this due?");
         }
         return new Deadline(description, parseDateTime(by));
+    }
+
+    /**
+     * Parses the keyword after the "find" command word, e.g. "book" in "find book".
+     *
+     * <p>Everything after the command word is the keyword, so it may contain
+     * spaces, e.g. "find return book".
+     *
+     * @param input the full command entered by the user.
+     * @return the keyword, without surrounding spaces.
+     * @throws GLaDOSException if no keyword was given.
+     */
+    public static String parseFindKeyword(String input) throws GLaDOSException {
+        String keyword = input.substring(COMMAND_FIND.length()).trim();
+        if (keyword.isEmpty()) {
+            throw new GLaDOSException("Find what? Give me a keyword, like find book.");
+        }
+        return keyword;
     }
 
     /**
