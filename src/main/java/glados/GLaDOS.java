@@ -7,7 +7,6 @@ import glados.task.Todo;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 /**
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
@@ -61,31 +60,14 @@ public class GLaDOS {
     /** Separates fields in the data file, so it cannot appear inside a task. */
     private static final String RESERVED_CHARACTER = "|";
 
-    /** Indentation placed before every line of GLaDOS's replies. */
-    private static final String INDENT = "     ";
-
-    /** Horizontal divider that wraps each block of replies. */
-    private static final String DIVIDER =
-            "    ____________________________________________________________";
-
-    /** ASCII art banner shown at startup, already indented. */
-    private static final String BANNER = "        ________          ____  ____  _____\n"
-            + "       / ____/ /   ____ _/ __ \\/ __ \\/ ___/\n"
-            + "      / / __/ /   / __ `/ / / / / / /\\__ \\ \n"
-            + "     / /_/ / /___/ /_/ / /_/ / /_/ /___/ / \n"
-            + "     \\____/_____/\\__,_/_____/\\____//____/  \n";
-
     /**
      * Runs the chatbot until the user enters the exit command.
      *
      * @param args command line arguments, not used.
      */
     public static void main(String[] args) {
-        System.out.println(DIVIDER);
-        System.out.println(BANNER);
-        System.out.println(INDENT + "Hello, I'm GLaDOS nice to... Oh, it's you.");
-        System.out.println(INDENT + "State your query. I have other tests to run.");
-        System.out.println(DIVIDER);
+        Ui ui = new Ui();
+        ui.showWelcome();
 
         // An ArrayList grows as needed, so there is no fixed task limit or separate count to track.
         ArrayList<Task> tasks = new ArrayList<>();
@@ -93,74 +75,58 @@ public class GLaDOS {
         try {
             tasks = storage.load();
         } catch (GLaDOSException e) {
-            System.out.println(DIVIDER);
-            System.out.println(INDENT + e.getMessage());
-            System.out.println(DIVIDER);
+            ui.showLoadingError(e.getMessage());
         }
         if (storage.getCorruptedLineCount() > 0) {
-            System.out.println(DIVIDER);
-            System.out.println(INDENT + "Your save file is damaged. I skipped "
-                    + storage.getCorruptedLineCount() + " unreadable line(s).");
-            System.out.println(INDENT + "They will be gone for good the next time I save.");
-            System.out.println(DIVIDER);
+            ui.showCorruptedLineWarning(storage.getCorruptedLineCount());
         }
 
-        Scanner in = new Scanner(System.in);
-        String input = in.nextLine();
+        String input = ui.readCommand();
 
         while (!input.equals(COMMAND_BYE)) {
-            System.out.println(DIVIDER);
+            ui.showLine();
 
             try {
                 if (input.equals(COMMAND_LIST)) {
-                    System.out.println(INDENT + "Here are the tasks in your list:");
-                    for (int i = 0; i < tasks.size(); i++) {
-                        System.out.println(INDENT + (i + 1) + "." + tasks.get(i));
-                    }
+                    ui.showTaskList(tasks);
                 } else if (input.equals(COMMAND_MARK) || input.startsWith(COMMAND_MARK + " ")) {
                     Task task = tasks.get(parseTaskIndex(input, COMMAND_MARK, tasks.size()));
                     task.markAsDone();
-                    System.out.println(INDENT + "Nice! I've marked this task as done:");
-                    System.out.println(INDENT + "  " + task);
+                    ui.showTaskMarked(task);
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_UNMARK) || input.startsWith(COMMAND_UNMARK + " ")) {
                     Task task = tasks.get(parseTaskIndex(input, COMMAND_UNMARK, tasks.size()));
                     task.markAsNotDone();
-                    System.out.println(INDENT + "OK, I've marked this task as not done yet:");
-                    System.out.println(INDENT + "  " + task);
+                    ui.showTaskUnmarked(task);
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_DELETE) || input.startsWith(COMMAND_DELETE + " ")) {
                     // remove(int) takes the task out and shifts every later task up by one.
                     Task task = tasks.remove(parseTaskIndex(input, COMMAND_DELETE, tasks.size()));
-                    System.out.println(INDENT + "Noted. I've removed this task:");
-                    System.out.println(INDENT + "  " + task);
-                    System.out.println(INDENT + "Now you have " + tasks.size() + " tasks in the list.");
+                    ui.showTaskDeleted(task, tasks.size());
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
-                    addTask(tasks, parseTodo(input));
+                    addTask(tasks, parseTodo(input), ui);
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_DEADLINE)
                         || input.startsWith(COMMAND_DEADLINE + " ")) {
-                    addTask(tasks, parseDeadline(input));
+                    addTask(tasks, parseDeadline(input), ui);
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_EVENT) || input.startsWith(COMMAND_EVENT + " ")) {
-                    addTask(tasks, parseEvent(input));
+                    addTask(tasks, parseEvent(input), ui);
                     storage.save(tasks);
                 } else {
                     throw new GLaDOSException("I have no idea what that was. Try one of: "
                             + "list, todo, deadline, event, mark, unmark, delete, bye.");
                 }
             } catch (GLaDOSException e) {
-                System.out.println(INDENT + e.getMessage());
+                ui.showError(e.getMessage());
             }
 
-            System.out.println(DIVIDER);
-            input = in.nextLine();
+            ui.showLine();
+            input = ui.readCommand();
         }
 
-        System.out.println(DIVIDER);
-        System.out.println(INDENT + "Test concluded. Try not to disappoint me next time.");
-        System.out.println(DIVIDER);
+        ui.showGoodbye();
     }
 
     /**
@@ -220,13 +186,11 @@ public class GLaDOS {
     }
 
     /**
-     * Appends the given task to the list and prints the confirmation.
+     * Appends the given task to the list and shows the confirmation.
      */
-    private static void addTask(ArrayList<Task> tasks, Task task) {
+    private static void addTask(ArrayList<Task> tasks, Task task, Ui ui) {
         tasks.add(task);
-        System.out.println(INDENT + "Got it. I've added this task:");
-        System.out.println(INDENT + "  " + task);
-        System.out.println(INDENT + "Now you have " + tasks.size() + " tasks in the list.");
+        ui.showTaskAdded(task, tasks.size());
     }
 
     /**
