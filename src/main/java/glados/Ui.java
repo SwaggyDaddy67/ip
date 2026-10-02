@@ -2,7 +2,6 @@ package glados;
 
 import glados.task.Task;
 
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -105,7 +104,7 @@ public class Ui {
     /**
      * Shows every task, numbered from 1.
      */
-    public void showTaskList(ArrayList<Task> tasks) {
+    public void showTaskList(TaskList tasks) {
         showMessage("Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
             showMessage((i + 1) + "." + tasks.get(i));

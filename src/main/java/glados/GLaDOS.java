@@ -6,7 +6,6 @@ import glados.task.Task;
 import glados.task.Todo;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 
 /**
  * Runs GLaDOS, a command line chatbot that keeps a simple list of tasks.
@@ -69,13 +68,13 @@ public class GLaDOS {
         Ui ui = new Ui();
         ui.showWelcome();
 
-        // An ArrayList grows as needed, so there is no fixed task limit or separate count to track.
-        ArrayList<Task> tasks = new ArrayList<>();
         Storage storage = new Storage(DATA_FILE);
+        TaskList tasks;
         try {
-            tasks = storage.load();
+            tasks = new TaskList(storage.load());
         } catch (GLaDOSException e) {
             ui.showLoadingError(e.getMessage());
+            tasks = new TaskList();
         }
         if (storage.getCorruptedLineCount() > 0) {
             ui.showCorruptedLineWarning(storage.getCorruptedLineCount());
@@ -100,8 +99,7 @@ public class GLaDOS {
                     ui.showTaskUnmarked(task);
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_DELETE) || input.startsWith(COMMAND_DELETE + " ")) {
-                    // remove(int) takes the task out and shifts every later task up by one.
-                    Task task = tasks.remove(parseTaskIndex(input, COMMAND_DELETE, tasks.size()));
+                    Task task = tasks.delete(parseTaskIndex(input, COMMAND_DELETE, tasks.size()));
                     ui.showTaskDeleted(task, tasks.size());
                     storage.save(tasks);
                 } else if (input.equals(COMMAND_TODO) || input.startsWith(COMMAND_TODO + " ")) {
@@ -188,7 +186,7 @@ public class GLaDOS {
     /**
      * Appends the given task to the list and shows the confirmation.
      */
-    private static void addTask(ArrayList<Task> tasks, Task task, Ui ui) {
+    private static void addTask(TaskList tasks, Task task, Ui ui) {
         tasks.add(task);
         ui.showTaskAdded(task, tasks.size());
     }
